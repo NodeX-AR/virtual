@@ -308,6 +308,8 @@ let wantPhoto = false, recording = false, recorder = null, chunks = [], recStart
 let fallbackMode = false, fallbackStream = null, fallbackHasGyro = false;
 let fallbackPlacement = {x:0, y:-FALLBACK_CAMERA_HEIGHT_M, z:-4}, fallbackOrientation = {alpha:0, beta:0, gamma:0};
 let fallbackAnchorSet = false;
+let fallbackMotionLast = 0;
+const fallbackVelocity = new THREE.Vector3(), fallbackMotionOffset = new THREE.Vector3();
 let fallbackPointers = new Map(), fallbackPinchDistance = 0, fallbackPinchScale = 1;
 const tmpM = new THREE.Matrix4();
 
@@ -363,6 +365,8 @@ async function startFallbackAR(){
   camera.updateProjectionMatrix();
   fallbackPlacement = {x:0, y:-FALLBACK_CAMERA_HEIGHT_M, z:-4};
   fallbackAnchorSet = false;
+  fallbackMotionLast = 0;
+  fallbackVelocity.set(0,0,0); fallbackMotionOffset.set(0,0,0);
   fallbackPinchScale = stage.scale.x || 1;
   updateFallbackStage();
   try {
@@ -395,6 +399,12 @@ async function enableFallbackOrientation(){
       if (await DeviceOrientationEvent.requestPermission() !== 'granted') return;
     }
     addEventListener('deviceorientation', onFallbackOrientation, true);
+    if ('DeviceMotionEvent' in window){
+      if (typeof DeviceMotionEvent.requestPermission === 'function') {
+        if (await DeviceMotionEvent.requestPermission() !== 'granted') return;
+      }
+      addEventListener('devicemotion', onFallbackMotion, true);
+    }
   } catch (e) { /* A denied sensor permission simply leaves drag controls active. */ }
 }
 function onFallbackOrientation(e){
@@ -418,6 +428,27 @@ function onFallbackOrientation(e){
     fallbackAnchorSet = true;
     updateFallbackStage();
   } else updateSun();
+}
+function onFallbackMotion(e){
+  const raw = e.acceleration;
+  const includesGravity = !raw && e.accelerationIncludingGravity;
+  const a = raw || includesGravity;
+  if (!a || a.x == null || a.y == null || a.z == null || !fallbackAnchorSet) return;
+  const now = performance.now();
+  if (!fallbackMotionLast){ fallbackMotionLast = now; return; }
+  const dt = Math.min(.05, (now - fallbackMotionLast) / 1000);
+  fallbackMotionLast = now;
+  const acceleration = new THREE.Vector3(a.x, a.y, a.z).applyQuaternion(camera.quaternion);
+  if (includesGravity) acceleration.y += 9.81;
+  if (acceleration.length() < .18) acceleration.set(0,0,0);
+  fallbackVelocity.addScaledVector(acceleration, dt);
+  fallbackVelocity.multiplyScalar(Math.exp(-5 * dt));
+  const delta = fallbackVelocity.clone().multiplyScalar(dt);
+  fallbackMotionOffset.add(delta);
+  fallbackMotionOffset.x = THREE.MathUtils.clamp(fallbackMotionOffset.x, -1.5, 1.5);
+  fallbackMotionOffset.y = THREE.MathUtils.clamp(fallbackMotionOffset.y, -1.5, 1.5);
+  fallbackMotionOffset.z = THREE.MathUtils.clamp(fallbackMotionOffset.z, -1.5, 1.5);
+  stage.position.add(delta);
 }
 function fallbackPointerDown(e){
   if (fallbackMode && !fallbackStream && navigator.mediaDevices){
@@ -639,6 +670,8 @@ $('replace').onclick = () => {
     placed = true; stage.visible = true;
     fallbackPlacement = {x:0, y:-FALLBACK_CAMERA_HEIGHT_M, z:-4};
     fallbackAnchorSet = false;
+    fallbackMotionLast = 0;
+    fallbackVelocity.set(0,0,0); fallbackMotionOffset.set(0,0,0);
     updateFallbackStage();
     $('hint').classList.add('off');
   } else {
@@ -655,6 +688,7 @@ $('bExit').onclick = () => {
     fallbackStream = null;
     $('fallback-camera').srcObject = null; $('fallback-camera').style.display = 'none';
     removeEventListener('deviceorientation', onFallbackOrientation, true);
+    removeEventListener('devicemotion', onFallbackMotion, true);
     $('ui').classList.remove('on'); $('landing').style.display = '';
   }
 };
