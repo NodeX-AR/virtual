@@ -135,6 +135,7 @@ import {XREstimatedLight} from 'three/addons/webxr/XREstimatedLight.js';
 
 const $ = id => document.getElementById(id);
 const CAR_LENGTH_M = 4.5;           // used only when the model's native size is not car-like (2.5-7 m)
+const FALLBACK_CAMERA_HEIGHT_M = 1.35; // estimated phone height used when WebXR plane detection is unavailable
 const REC_LONG_SIDE = 1280, PHOTO_LONG_SIDE = 1920;
 
 /* ---------- renderer & scene ---------- */
@@ -305,7 +306,8 @@ let session = null, hitSource = null, glBinding = null, refSpace = null;
 let placed = false, lastHit = null, anchor = null, hasCam = false;
 let wantPhoto = false, recording = false, recorder = null, chunks = [], recStart = 0;
 let fallbackMode = false, fallbackStream = null, fallbackHasGyro = false;
-let fallbackPlacement = {x:0, y:0, z:-4}, fallbackOrientation = {alpha:0, beta:0, gamma:0};
+let fallbackPlacement = {x:0, y:-FALLBACK_CAMERA_HEIGHT_M, z:-4}, fallbackOrientation = {alpha:0, beta:0, gamma:0};
+let fallbackAnchorSet = false;
 let fallbackPointers = new Map(), fallbackPinchDistance = 0, fallbackPinchScale = 1;
 const tmpM = new THREE.Matrix4();
 
@@ -359,7 +361,8 @@ async function startFallbackAR(){
   camera.near = .01;
   camera.far = 100;
   camera.updateProjectionMatrix();
-  fallbackPlacement = {x:0, y:0, z:-4};
+  fallbackPlacement = {x:0, y:-FALLBACK_CAMERA_HEIGHT_M, z:-4};
+  fallbackAnchorSet = false;
   fallbackPinchScale = stage.scale.x || 1;
   updateFallbackStage();
   try {
@@ -409,7 +412,12 @@ function onFallbackOrientation(e){
   camera.quaternion.setFromEuler(euler);
   camera.quaternion.multiply(q0.setFromAxisAngle(zee, -orient));
   camera.quaternion.multiply(q0.setFromAxisAngle(new THREE.Vector3(1,0,0), -Math.PI / 2));
-  updateFallbackStage();
+  // Establish the initial floor-relative position once; later sensor updates move
+  // the view around this fixed world position instead of carrying the car along.
+  if (!fallbackAnchorSet){
+    fallbackAnchorSet = true;
+    updateFallbackStage();
+  } else updateSun();
 }
 function fallbackPointerDown(e){
   if (fallbackMode && !fallbackStream && navigator.mediaDevices){
@@ -628,7 +636,10 @@ $('scl').oninput = e => { stage.scale.setScalar(+e.target.value); e.target.nextE
 $('replace').onclick = () => {
   anchor = null; $('pCar').classList.remove('on'); $('bCar').classList.remove('act');
   if (fallbackMode){
-    placed = true; stage.visible = true; fallbackPlacement = {x:0, y:0, z:-4}; updateFallbackStage();
+    placed = true; stage.visible = true;
+    fallbackPlacement = {x:0, y:-FALLBACK_CAMERA_HEIGHT_M, z:-4};
+    fallbackAnchorSet = false;
+    updateFallbackStage();
     $('hint').classList.add('off');
   } else {
     placed = false; stage.visible = false; $('hint').classList.remove('off'); $('hint').textContent = 'Move your phone to find the ground';
