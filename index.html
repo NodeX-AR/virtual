@@ -10,7 +10,7 @@
   :root{--bg:#0e0f11;--surface:#17191c;--surface2:#23262b;--line:#2c3036;--ink:#f1f1ee;--dim:#8b8f96;--white:#f5f5f2;--rec:#ff453a;
         --out:cubic-bezier(.22,1,.36,1);--spring:cubic-bezier(.34,1.45,.64,1);--inout:cubic-bezier(.65,0,.35,1)}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:15px/1.45 Inter,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:15px/1.45 Inter,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased;isolation:isolate}
   button{font:inherit;color:inherit;border:0;cursor:pointer;background:none;padding:0}
   button{transition:transform .14s var(--inout),background-color .25s var(--out),color .25s var(--out),opacity .25s var(--out)}
   button:active{transform:scale(.93)}
@@ -32,7 +32,7 @@
   #start:disabled{background:var(--surface2);color:var(--dim);cursor:default}
   #msg{margin-top:14px;color:var(--dim);font-size:13px;min-height:1.4em}
 
-  #ui{position:fixed;inset:0;display:none;pointer-events:none;color:var(--ink)}
+  #ui{position:fixed;inset:0;z-index:2;display:none;pointer-events:none;color:var(--ink)}
   #ui.on{display:block}
   #ui .hit{pointer-events:auto}
   #hint{position:absolute;top:calc(14px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--line);padding:9px 16px;border-radius:12px;font-size:14px;white-space:nowrap;transition:opacity .35s var(--out),transform .5s var(--spring)}
@@ -77,6 +77,9 @@
   #arBtn{position:absolute;left:50%;bottom:calc(70px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--white);color:#111;font-weight:600;padding:0 26px;height:52px;border-radius:16px}
   #arBtn:active{transform:translateX(-50%) scale(.95)}
   @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+  /* Fallback camera pass-through sits below the transparent Three.js canvas. */
+  #fallback-camera{position:fixed;inset:0;width:100%;height:100%;z-index:-1;object-fit:cover;background:#000;display:none}
+  canvas{position:fixed;inset:0;z-index:0;touch-action:none}
 </style>
 </head>
 <body>
@@ -94,6 +97,7 @@
   </model-viewer>
   <p>Tap “View in your space” and point at the road. Lighting, shadow and photo capture come from your phone’s built-in AR viewer.</p>
 </div>
+<video id="fallback-camera" autoplay playsinline muted></video>
 
 <div id="ui">
   <div id="hint">Move your phone to find the ground</div>
@@ -137,6 +141,7 @@ const REC_LONG_SIDE = 1280, PHOTO_LONG_SIDE = 1920;
 const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
 renderer.setPixelRatio(1);
 renderer.setSize(innerWidth, innerHeight);
+renderer.setClearAlpha(0);
 renderer.autoClear = false;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -299,13 +304,27 @@ function updateSun(){
 let session = null, hitSource = null, glBinding = null, refSpace = null;
 let placed = false, lastHit = null, anchor = null, hasCam = false;
 let wantPhoto = false, recording = false, recorder = null, chunks = [], recStart = 0;
+let fallbackMode = false, fallbackStream = null, fallbackHasGyro = false;
+let fallbackPlacement = {x:0, y:0, z:-4}, fallbackOrientation = {alpha:0, beta:0, gamma:0};
+let fallbackPointers = new Map(), fallbackPinchDistance = 0, fallbackPinchScale = 1;
 const tmpM = new THREE.Matrix4();
 
 async function startAR(){
-  session = await navigator.xr.requestSession('immersive-ar', {
-    requiredFeatures:['hit-test'],
-    optionalFeatures:['dom-overlay','light-estimation','camera-access','anchors'],
-    domOverlay:{root:$('ui')} });
+  try {
+    // Native WebXR path. Any unsupported session error falls through to the universal camera mode.
+    if (!navigator.xr || !(await navigator.xr.isSessionSupported('immersive-ar'))) {
+      return startFallbackAR();
+    }
+    session = await navigator.xr.requestSession('immersive-ar', {
+      requiredFeatures:['hit-test'],
+      optionalFeatures:['dom-overlay','light-estimation','camera-access','anchors'],
+      domOverlay:{root:$('ui')} });
+  } catch (e) {
+    const unsupported = e && (e.name === 'NotSupportedError' ||
+      /specified session configuration is not supported/i.test(e.message || ''));
+    if (unsupported || !navigator.xr) return startFallbackAR();
+    throw e;
+  }
   await renderer.xr.setSession(session);
   const gl = renderer.getContext();
   glBinding = ('XRWebGLBinding' in window) ? new XRWebGLBinding(session, gl) : null;
@@ -318,6 +337,124 @@ async function startAR(){
   session.addEventListener('select', onSelect);
   session.addEventListener('end', onEnd);
 }
+async function startFallbackAR(){
+  if (fallbackMode) return;
+  fallbackMode = true;
+  renderer.xr.enabled = false;
+  renderer.domElement.style.display = '';
+  document.body.style.background = 'transparent';
+  $('landing').style.display = 'none';
+  $('fallback').style.display = 'none';
+  $('ui').classList.add('on');
+  $('hint').textContent = 'Move your phone or drag to position the car';
+  $('hint').classList.remove('off');
+  stage.visible = true;
+  placed = true;
+  reticle.visible = false;
+  bg.visible = false;
+  camera.matrixAutoUpdate = true;
+  camera.matrixWorldAutoUpdate = true;
+  camera.aspect = innerWidth / innerHeight;
+  camera.fov = 60;
+  camera.near = .01;
+  camera.far = 100;
+  camera.updateProjectionMatrix();
+  fallbackPlacement = {x:0, y:0, z:-4};
+  fallbackPinchScale = stage.scale.x || 1;
+  updateFallbackStage();
+  try {
+    fallbackStream = await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:'environment'}, audio:false
+    });
+    $('fallback-camera').srcObject = fallbackStream;
+    $('fallback-camera').style.display = 'block';
+    await $('fallback-camera').play();
+    hasCam = true;
+    $('bar').dataset.nocam = '';
+    $('shutter').style.opacity = $('rec').style.opacity = $('bGrade').style.opacity = 1;
+  } catch (e) {
+    hasCam = false;
+    $('hint').textContent = 'Camera unavailable — drag to view the car';
+    $('shutter').style.opacity = $('rec').style.opacity = $('bGrade').style.opacity = .3;
+  }
+  await enableFallbackOrientation();
+}
+function updateFallbackStage(){
+  const local = new THREE.Vector3(fallbackPlacement.x, fallbackPlacement.y, fallbackPlacement.z);
+  local.applyQuaternion(camera.quaternion);
+  stage.position.copy(local);
+  updateSun();
+}
+async function enableFallbackOrientation(){
+  if (!('DeviceOrientationEvent' in window)) return;
+  try {
+    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+      if (await DeviceOrientationEvent.requestPermission() !== 'granted') return;
+    }
+    addEventListener('deviceorientation', onFallbackOrientation, true);
+  } catch (e) { /* A denied sensor permission simply leaves drag controls active. */ }
+}
+function onFallbackOrientation(e){
+  if (e.alpha == null && e.beta == null && e.gamma == null) return;
+  fallbackHasGyro = true;
+  fallbackOrientation = {alpha:e.alpha || 0, beta:e.beta || 0, gamma:e.gamma || 0};
+  const zee = new THREE.Vector3(0,0,1);
+  const euler = new THREE.Euler();
+  const q0 = new THREE.Quaternion();
+  const orient = (screen.orientation && screen.orientation.angle || 0) * Math.PI / 180;
+  const alpha = THREE.MathUtils.degToRad(fallbackOrientation.alpha);
+  const beta = THREE.MathUtils.degToRad(fallbackOrientation.beta);
+  const gamma = THREE.MathUtils.degToRad(fallbackOrientation.gamma);
+  euler.set(beta, alpha, -gamma, 'YXZ');
+  camera.quaternion.setFromEuler(euler);
+  camera.quaternion.multiply(q0.setFromAxisAngle(zee, -orient));
+  camera.quaternion.multiply(q0.setFromAxisAngle(new THREE.Vector3(1,0,0), -Math.PI / 2));
+  updateFallbackStage();
+}
+function fallbackPointerDown(e){
+  if (fallbackMode && !fallbackStream && navigator.mediaDevices){
+    navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}, audio:false}).then(stream => {
+      fallbackStream = stream; $('fallback-camera').srcObject = stream;
+      $('fallback-camera').style.display = 'block'; hasCam = true;
+      $('shutter').style.opacity = $('rec').style.opacity = $('bGrade').style.opacity = 1;
+    }).catch(() => {});
+  }
+  if (fallbackMode && !fallbackHasGyro) enableFallbackOrientation();
+  fallbackPointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  if (fallbackPointers.size === 2){
+    const p = [...fallbackPointers.values()];
+    fallbackPinchDistance = Math.hypot(p[0].x-p[1].x, p[0].y-p[1].y);
+    fallbackPinchScale = stage.scale.x;
+  }
+  renderer.domElement.setPointerCapture?.(e.pointerId);
+}
+function fallbackPointerMove(e){
+  if (!fallbackPointers.has(e.pointerId)) return;
+  const previous = fallbackPointers.get(e.pointerId);
+  fallbackPointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  if (fallbackPointers.size >= 2){
+    const p = [...fallbackPointers.values()];
+    const distance = Math.max(1, Math.hypot(p[0].x-p[1].x, p[0].y-p[1].y));
+    stage.scale.setScalar(THREE.MathUtils.clamp(fallbackPinchScale * distance / fallbackPinchDistance, .3, 2));
+    $('scl').value = stage.scale.x; $('scl').nextElementSibling.textContent = stage.scale.x.toFixed(2) + '×';
+    return;
+  }
+  const dx = e.clientX - previous.x, dy = e.clientY - previous.y;
+  if (fallbackHasGyro){
+    fallbackPlacement.x += dx / innerHeight * 4;
+    fallbackPlacement.y -= dy / innerHeight * 4;
+    updateFallbackStage();
+  } else {
+    camera.rotation.y -= dx / innerWidth * Math.PI;
+    camera.rotation.x = THREE.MathUtils.clamp(camera.rotation.x - dy / innerHeight * Math.PI, -1.35, 1.35);
+    camera.lookAt(stage.position);
+  }
+}
+function fallbackPointerUp(e){ fallbackPointers.delete(e.pointerId); }
+renderer.domElement.addEventListener('pointerdown', fallbackPointerDown);
+renderer.domElement.addEventListener('pointermove', fallbackPointerMove);
+renderer.domElement.addEventListener('pointerup', fallbackPointerUp);
+renderer.domElement.addEventListener('pointercancel', fallbackPointerUp);
 function onEnd(){
   if (recording) stopRec();
   session = null; hitSource = null; anchor = null;
@@ -332,8 +469,28 @@ function onSelect(){
   $('hint').classList.add('off');
   if (lastHit.createAnchor) lastHit.createAnchor().then(a => anchor = a).catch(() => {});
 }
+function composeFallbackFrame(){
+  const video = $('fallback-camera');
+  const w = innerWidth, h = innerHeight;
+  if (outCanvas.width !== w || outCanvas.height !== h){ outCanvas.width = w; outCanvas.height = h; }
+  outCtx.drawImage(video, 0, 0, w, h);
+  outCtx.drawImage(renderer.domElement, 0, 0, w, h);
+}
 
 renderer.setAnimationLoop((t, frame) => {
+  if (fallbackMode){
+    renderer.setRenderTarget(null);
+    renderer.clear();
+    renderer.render(scene, camera);
+    if (hasCam && (wantPhoto || recording)){
+      composeFallbackFrame();
+      if (wantPhoto){
+        wantPhoto = false;
+        outCanvas.toBlob(b => saveBlob(b, `car-ar-${Date.now()}.jpg`), 'image/jpeg', .95);
+      }
+    }
+    return;
+  }
   if (!frame || !session) return;
   const xrRT = renderer.getRenderTarget();
 
@@ -468,11 +625,28 @@ $('bGrade').onclick = e => toggle('pGrade', e.currentTarget);
 $('bCar').onclick = e => toggle('pCar', e.currentTarget);
 $('rot').oninput = e => { yaw.rotation.y = THREE.MathUtils.degToRad(+e.target.value); e.target.nextElementSibling.textContent = e.target.value + '°'; };
 $('scl').oninput = e => { stage.scale.setScalar(+e.target.value); e.target.nextElementSibling.textContent = (+e.target.value).toFixed(2) + '×'; };
-$('replace').onclick = () => { placed = false; anchor = null; stage.visible = false; $('pCar').classList.remove('on'); $('bCar').classList.remove('act');
-  $('hint').classList.remove('off'); $('hint').textContent = 'Move your phone to find the ground'; };
+$('replace').onclick = () => {
+  anchor = null; $('pCar').classList.remove('on'); $('bCar').classList.remove('act');
+  if (fallbackMode){
+    placed = true; stage.visible = true; fallbackPlacement = {x:0, y:0, z:-4}; updateFallbackStage();
+    $('hint').classList.add('off');
+  } else {
+    placed = false; stage.visible = false; $('hint').classList.remove('off'); $('hint').textContent = 'Move your phone to find the ground';
+  }
+};
 $('shutter').onclick = () => { if (hasCam) wantPhoto = true; };
 $('rec').onclick = () => { if (!hasCam) return; recording ? stopRec() : startRec(); };
-$('bExit').onclick = () => session && session.end();
+$('bExit').onclick = () => {
+  if (session) session.end();
+  if (fallbackMode){
+    fallbackMode = false;
+    fallbackStream?.getTracks().forEach(track => track.stop());
+    fallbackStream = null;
+    $('fallback-camera').srcObject = null; $('fallback-camera').style.display = 'none';
+    removeEventListener('deviceorientation', onFallbackOrientation, true);
+    $('ui').classList.remove('on'); $('landing').style.display = '';
+  }
+};
 $('start').onclick = () => startAR().catch(e => { $('msg').textContent = 'Could not start AR: ' + e.message; });
 
 async function setStart(){
@@ -480,23 +654,27 @@ async function setStart(){
   let supported = false;
   try { supported = !!navigator.xr && await navigator.xr.isSessionSupported('immersive-ar'); }
   catch (e) {
-    // The page is inside an iframe/preview that does not allow WebXR (permissions policy).
+    // Permission-policy and older-browser failures use the same universal fallback.
     xrBlocked = true;
-    btn.disabled = false; btn.textContent = 'Open in a new tab';
-    $('msg').textContent = 'AR is blocked inside previews and embedded frames. Open the deployed page (GitHub Pages) directly in Chrome.';
-    btn.onclick = () => window.open(location.href, '_blank', 'noopener');
+    await startFallbackAR();
     return;
   }
   if (!supported){
-    $('landing').style.display = 'none'; $('fallback').style.display = 'flex';   // iOS Quick Look / Scene Viewer / desktop viewer
-    import('https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js').catch(console.error);
+    await startFallbackAR();
     return;
   }
   xrOK = true;
   if (modelReady){ btn.disabled = false; btn.textContent = 'Start AR'; }
 }
 setStart();
-addEventListener('resize', () => renderer.setSize(innerWidth, innerHeight));
+addEventListener('resize', () => {
+  renderer.setSize(innerWidth, innerHeight);
+  if (fallbackMode){
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+    updateFallbackStage();
+  }
+});
 </script>
 </body>
 </html>
