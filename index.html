@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Car AR</title>
+<style>
+  :root{--bg:#0e0f11;--surface:#17191c;--surface2:#23262b;--line:#2c3036;--ink:#f1f1ee;--dim:#8b8f96;--white:#f5f5f2;--rec:#ff453a;
+        --out:cubic-bezier(.22,1,.36,1);--spring:cubic-bezier(.34,1.45,.64,1);--inout:cubic-bezier(.65,0,.35,1)}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:15px/1.45 Inter,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  button{font:inherit;color:inherit;border:0;cursor:pointer;background:none;padding:0}
+  button{transition:transform .14s var(--inout),background-color .25s var(--out),color .25s var(--out),opacity .25s var(--out)}
+  button:active{transform:scale(.93)}
+  button.jump{animation:jump .46s both}
+  @keyframes jump{
+    0%{transform:scale(.93);animation-timing-function:cubic-bezier(.2,.9,.3,1)}
+    38%{transform:translateY(-6px) scale(1.04);animation-timing-function:cubic-bezier(.5,0,.6,1)}
+    70%{transform:translateY(1px) scale(.99);animation-timing-function:cubic-bezier(.3,.7,.4,1)}
+    100%{transform:none}}
+  :focus-visible{outline:2px solid var(--white);outline-offset:3px}
+
+  #landing{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:32px 24px calc(28px + env(safe-area-inset-bottom));background:var(--bg)}
+  #landing>*{animation:rise .7s var(--out) both}
+  #landing h1{animation-delay:.05s}#landing p{animation-delay:.14s}#landing #start{animation-delay:.23s}#landing #msg{animation-delay:.3s}
+  @keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+  #landing h1{font-size:40px;line-height:1.05;margin:0 0 12px;font-weight:600;letter-spacing:-.03em}
+  #landing p{color:var(--dim);margin:0 0 28px;max-width:34ch}
+  #start{background:var(--white);color:#111;font-weight:600;height:56px;border-radius:16px;font-size:16px;width:100%}
+  #start:disabled{background:var(--surface2);color:var(--dim);cursor:default}
+  #msg{margin-top:14px;color:var(--dim);font-size:13px;min-height:1.4em}
+
+  #ui{position:fixed;inset:0;display:none;pointer-events:none;color:var(--ink)}
+  #ui.on{display:block}
+  #ui .hit{pointer-events:auto}
+  #hint{position:absolute;top:calc(14px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--line);padding:9px 16px;border-radius:12px;font-size:14px;white-space:nowrap;transition:opacity .35s var(--out),transform .5s var(--spring)}
+  #hint.off{opacity:0;transform:translate(-50%,-10px)}
+  #timer{position:absolute;top:calc(64px + env(safe-area-inset-top));left:50%;transform:translate(-50%,-8px);background:var(--rec);padding:3px 10px;border-radius:8px;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;opacity:0;transition:opacity .3s var(--out),transform .5s var(--spring)}
+  #timer.on{opacity:1;transform:translate(-50%,0)}
+  #thumb{position:absolute;left:14px;top:calc(14px + env(safe-area-inset-top));width:60px;height:60px;border-radius:14px;object-fit:cover;border:2px solid var(--white);opacity:0;transform:scale(.6);pointer-events:none;transition:opacity .3s var(--out),transform .55s var(--spring)}
+  #thumb.on{opacity:1;transform:none;pointer-events:auto}
+
+  #bar{position:absolute;left:0;right:0;bottom:0;padding:12px 18px calc(18px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:space-between}
+  .chip{width:58px;height:58px;border-radius:16px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;font-weight:500}
+  .chip svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .chip.act{background:var(--white);color:#111;border-color:var(--white)}
+  #shutter{width:72px;height:72px;border-radius:50%;border:3px solid var(--white);display:grid;place-items:center}
+  #shutter::after{content:"";width:56px;height:56px;border-radius:50%;background:var(--white);transition:transform .3s var(--spring)}
+  #shutter:active::after{transform:scale(.88)}
+  #rec{width:58px;height:58px;border-radius:16px;background:var(--surface);border:1px solid var(--line);display:grid;place-items:center}
+  #rec i{width:22px;height:22px;border-radius:11px;background:var(--rec);transition:border-radius .4s var(--spring),transform .4s var(--spring)}
+  #rec.on i{border-radius:6px;transform:scale(.8)}
+
+  #ui .panel{position:absolute;left:12px;right:12px;bottom:calc(100px + env(safe-area-inset-bottom));background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:16px;max-height:46vh;overflow:auto;
+    opacity:0;visibility:hidden;transform:translateY(18px) scale(.97);pointer-events:none;
+    transition:opacity .3s var(--out),transform .5s var(--spring),visibility 0s .3s}
+  #ui .panel.on{opacity:1;visibility:visible;transform:none;pointer-events:auto;transition:opacity .3s var(--out),transform .5s var(--spring),visibility 0s}
+  .row{display:grid;grid-template-columns:96px 1fr 44px;align-items:center;gap:8px;margin:4px 0}
+  .row label{color:var(--dim);font-size:13px}
+  .row output{font-size:12px;text-align:right;font-variant-numeric:tabular-nums;color:var(--dim)}
+  .presets{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+  .presets button,.panel .btn{background:var(--surface2);padding:9px 14px;border-radius:12px;font-size:13px;font-weight:500}
+  .presets button.sel{background:var(--white);color:#111}
+  .panel .btn{margin-top:8px;margin-right:6px}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:24px;background:none;margin:0}
+  input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:var(--line)}
+  input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:var(--line)}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--white);margin-top:-8px;transition:transform .25s var(--spring)}
+  input[type=range]::-moz-range-thumb{width:20px;height:20px;border:0;border-radius:50%;background:var(--white)}
+  input[type=range]:active::-webkit-slider-thumb{transform:scale(1.2)}
+
+  #fallback{position:fixed;inset:0;display:none;flex-direction:column;background:var(--bg)}
+  #fallback model-viewer{flex:1;width:100%;--poster-color:transparent}
+  #fallback p{margin:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));color:var(--dim);font-size:13px}
+  #arBtn{position:absolute;left:50%;bottom:calc(70px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--white);color:#111;font-weight:600;padding:0 26px;height:52px;border-radius:16px}
+  #arBtn:active{transform:translateX(-50%) scale(.95)}
+  @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div id="landing">
+  <h1>Car AR</h1>
+  <p>Point at the road and tap to park the car. Walk around it, then shoot photos or video with color grading.</p>
+  <button id="start" disabled>Loading car…</button>
+  <div id="msg"></div>
+</div>
+
+<div id="fallback">
+  <model-viewer src="./car.glb" ar ar-modes="webxr scene-viewer quick-look" ar-scale="fixed" ar-placement="floor"
+    camera-controls touch-action="pan-y" shadow-intensity="1.2" shadow-softness="0.8" exposure="1" environment-image="neutral" alt="Car">
+    <button slot="ar-button" id="arBtn">View in your space</button>
+  </model-viewer>
+  <p>Tap “View in your space” and point at the road. Lighting, shadow and photo capture come from your phone’s built-in AR viewer.</p>
+</div>
+
+<div id="ui">
+  <div id="hint">Move your phone to find the ground</div>
+  <div id="timer">0:00</div>
+  <img id="thumb" class="hit" alt="Last capture">
+  <div class="panel hit" id="pGrade">
+    <div class="presets" id="presets"></div>
+    <div id="gradeRows"></div>
+    <button class="btn" id="flip">Flip camera feed</button>
+    <button class="btn" id="resetGrade">Reset</button>
+  </div>
+  <div class="panel hit" id="pCar">
+    <div class="row"><label>Rotate</label><input type="range" id="rot" min="-180" max="180" value="0"><output>0°</output></div>
+    <div class="row"><label>Size</label><input type="range" id="scl" min="0.3" max="2" step="0.01" value="1"><output>1.00×</output></div>
+    <button class="btn" id="replace">Re-place car</button>
+  </div>
+  <div id="bar">
+    <button class="chip hit" id="bCar"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3zM12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>Model</button>
+    <button class="chip hit" id="bGrade"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>Grade</button>
+    <button class="hit" id="shutter" aria-label="Take photo"></button>
+    <button class="hit" id="rec" aria-label="Record video"><i></i></button>
+    <button class="chip hit" id="bExit"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>Exit</button>
+  </div>
+</div>
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {DRACOLoader} from 'three/addons/loaders/DRACOLoader.js';
+import {MeshoptDecoder} from 'three/addons/libs/meshopt_decoder.module.js';
+import {XREstimatedLight} from 'three/addons/webxr/XREstimatedLight.js';
+
+const $ = id => document.getElementById(id);
+const CAR_LENGTH_M = 4.5;           // used only when the model's native size is not car-like (2.5-7 m)
+const REC_LONG_SIDE = 1280, PHOTO_LONG_SIDE = 1920;
+
+/* ---------- renderer & scene ---------- */
+const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+renderer.setPixelRatio(1);
+renderer.setSize(innerWidth, innerHeight);
+renderer.autoClear = false;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.xr.enabled = true;
+renderer.xr.setReferenceSpaceType('local');
+document.body.appendChild(renderer.domElement);
+renderer.domElement.style.display = 'none';
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera();            // mirrors the XR view for offscreen passes
+camera.matrixAutoUpdate = false; camera.matrixWorldAutoUpdate = false;
+
+const hemi = new THREE.HemisphereLight(0xffffff, 0x666666, 1.0);
+const sun = new THREE.DirectionalLight(0xffffff, 2.0);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+const sc = sun.shadow.camera; sc.left = sc.bottom = -6; sc.right = sc.top = 6; sc.near = .5; sc.far = 30;
+sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.03; sun.shadow.radius = 4;
+scene.add(hemi, sun, sun.target);
+
+const stage = new THREE.Group();            // anchored to the ground spot
+stage.visible = false;
+scene.add(stage);
+const yaw = new THREE.Group(); stage.add(yaw);
+const shadowPlane = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.ShadowMaterial({opacity:.5}));
+shadowPlane.rotation.x = -Math.PI/2; shadowPlane.receiveShadow = true;
+stage.add(shadowPlane);
+
+/* ---------- model ---------- */
+// Fetch with a plain URL string (not a Request object) so it also works behind sandboxed/proxied fetch shims.
+async function loadGlb(url, loader, onLoad, onProgress, onError){
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const total = +res.headers.get('content-length') || 0;
+    let buf;
+    if (res.body && res.body.getReader){
+      const reader = res.body.getReader(), parts = []; let got = 0;
+      for (;;){ const {done, value} = await reader.read(); if (done) break; parts.push(value); got += value.length; onProgress({loaded:got, total}); }
+      const u8 = new Uint8Array(got); let o = 0; for (const q of parts){ u8.set(q, o); o += q.length; }
+      buf = u8.buffer;
+    } else buf = await res.arrayBuffer();
+    loader.parse(buf, './', onLoad, onError);
+  } catch (e) { onError(e); }
+}
+let modelReady = false, xrOK = false, xrBlocked = false;
+{
+  const draco = new DRACOLoader().setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+  const loader = new GLTFLoader().setDRACOLoader(draco).setMeshoptDecoder(MeshoptDecoder);
+  loadGlb('./car.glb', loader, gltf => {
+    const m = gltf.scene;
+    m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = false; } });
+    const box = new THREE.Box3().setFromObject(m), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+    const len = Math.max(size.x, size.z);
+    // glTF units are metres: keep the model's own size if it looks like a real car, otherwise normalise
+    const k = (len >= 2.5 && len <= 7) ? 1 : CAR_LENGTH_M / len;
+    m.scale.setScalar(k);
+    m.position.set(-c.x*k, -box.min.y*k, -c.z*k);   // centred, wheels on the ground
+    yaw.add(m);
+    modelReady = true;
+    if (xrOK){ $('start').disabled = false; $('start').textContent = 'Start AR'; }
+  }, e => { if (e.total && !xrBlocked) $('start').textContent = `Loading car… ${Math.min(100, Math.round(e.loaded/e.total*100))}%`; },
+  err => { $('msg').textContent = 'Could not load car.glb — it must sit next to index.html in the repo root.'; console.error(err); });
+}
+
+/* ---------- camera feed + grading pipeline ---------- */
+const camTex = new THREE.Texture();                       // wraps the XR camera image
+const bgMat = new THREE.ShaderMaterial({
+  uniforms:{tCam:{value:camTex}, uFlip:{value:0}},
+  vertexShader:`varying vec2 v; void main(){ v = position.xy*.5+.5; gl_Position = vec4(position.xy,1.,1.); }`,
+  fragmentShader:`uniform sampler2D tCam; uniform float uFlip; varying vec2 v;
+    void main(){ vec2 u = vec2(v.x, mix(v.y, 1.-v.y, uFlip)); vec3 c = texture2D(tCam,u).rgb;
+      gl_FragColor = vec4(pow(c, vec3(2.2)), 1.); }`,
+  depthTest:false, depthWrite:false });
+const bg = new THREE.Mesh(new THREE.PlaneGeometry(2,2), bgMat);
+bg.frustumCulled = false; bg.renderOrder = -1000;
+scene.add(bg);
+
+const G = {exposure:0, contrast:1, saturation:1, temp:0, tint:0, highlights:0, shadows:0, vignette:0};
+const gradeMat = new THREE.ShaderMaterial({
+  uniforms:{tScene:{value:null}, g1:{value:new THREE.Vector4()}, g2:{value:new THREE.Vector4()}},
+  vertexShader:`varying vec2 v; void main(){ v = position.xy*.5+.5; gl_Position = vec4(position.xy,0.,1.); }`,
+  fragmentShader:`uniform sampler2D tScene; uniform vec4 g1; uniform vec4 g2; varying vec2 v;
+    // g1 = exposure, contrast, saturation, temp   g2 = tint, highlights, shadows, vignette
+    vec3 soft(vec3 x){ vec3 o = max(x-.8,0.); return min(x,.8) + .2*tanh(o/.2); }
+    void main(){
+      vec3 c = texture2D(tScene,v).rgb * exp2(g1.x);
+      c *= vec3(1.+g1.w*.18, 1.-g2.x*.12, 1.-g1.w*.18);
+      c = pow(soft(max(c,0.)), vec3(1./2.2));
+      float l = dot(c, vec3(.2126,.7152,.0722));
+      c += g2.z*.18*(1.-smoothstep(0.,.55,l)) + g2.y*.18*smoothstep(.45,1.,l);
+      c = (c-.5)*g1.y + .5;
+      l = dot(c, vec3(.2126,.7152,.0722));
+      c = mix(vec3(l), c, g1.z);
+      c *= 1. - g2.w*smoothstep(.35,1.,length(v-.5)*1.5);
+      gl_FragColor = vec4(clamp(c,0.,1.),1.);
+    }`,
+  depthTest:false, depthWrite:false });
+const quadScene = new THREE.Scene();
+const quad = new THREE.Mesh(new THREE.PlaneGeometry(2,2), gradeMat);
+quad.frustumCulled = false; quadScene.add(quad);
+const quadCam = new THREE.Camera();
+
+const reticleScene = new THREE.Scene();
+const reticle = new THREE.Mesh(new THREE.RingGeometry(.14,.18,40).rotateX(-Math.PI/2),
+  new THREE.MeshBasicMaterial({color:0xffffff, depthTest:false}));
+reticle.matrixAutoUpdate = false; reticle.visible = false; reticleScene.add(reticle);
+
+const rtOpts = {format:THREE.RGBAFormat, type:THREE.HalfFloatType, colorSpace:THREE.LinearSRGBColorSpace, samples:4, depthBuffer:true};
+let rtScene = new THREE.WebGLRenderTarget(16,16,rtOpts);
+const outRT = new THREE.WebGLRenderTarget(16,16,{format:THREE.RGBAFormat, type:THREE.UnsignedByteType, depthBuffer:false});
+const outCanvas = document.createElement('canvas'), outCtx = outCanvas.getContext('2d');
+let pix = new Uint8Array(4), img = null, rtW = 0, rtH = 0;
+
+function sizeTargets(vw, vh, longSide){
+  const s = Math.min(1, longSide / Math.max(vw, vh));
+  const w = Math.max(2, Math.round(vw*s)), h = Math.max(2, Math.round(vh*s));
+  if (w === rtW && h === rtH) return;
+  rtW = w; rtH = h;
+  rtScene.setSize(w,h); outRT.setSize(w,h);
+  outCanvas.width = w; outCanvas.height = h;
+  pix = new Uint8Array(w*h*4); img = outCtx.createImageData(w,h);
+}
+function readOut(){
+  renderer.readRenderTargetPixels(outRT,0,0,rtW,rtH,pix);
+  const row = rtW*4, d = img.data;
+  for (let y=0; y<rtH; y++) d.set(pix.subarray((rtH-1-y)*row,(rtH-y)*row), y*row);
+  outCtx.putImageData(img,0,0);
+}
+function applyGrade(){
+  gradeMat.uniforms.g1.value.set(G.exposure, G.contrast, G.saturation, G.temp);
+  gradeMat.uniforms.g2.value.set(G.tint, G.highlights, G.shadows, G.vignette);
+}
+
+/* ---------- light estimation ---------- */
+const xrLight = new XREstimatedLight(renderer, true);
+let estimating = false;
+xrLight.addEventListener('estimationstart', () => {
+  estimating = true; scene.add(xrLight);
+  xrLight.directionalLight.visible = false;       // we use our own shadow-casting sun with its values
+  hemi.visible = false;
+  if (xrLight.environment) scene.environment = xrLight.environment;
+});
+xrLight.addEventListener('estimationend', () => {
+  estimating = false; scene.remove(xrLight); scene.environment = null; hemi.visible = true;
+});
+function updateSun(){
+  const dir = new THREE.Vector3(.35,1,.25).normalize();
+  if (estimating){
+    dir.copy(xrLight.directionalLight.position).normalize();
+    if (dir.y < .2){ dir.y = .2; dir.normalize(); }     // keep the sun above the horizon
+    sun.color.copy(xrLight.directionalLight.color);
+    sun.intensity = xrLight.directionalLight.intensity;
+  }
+  sun.target.position.copy(stage.position);
+  sun.position.copy(stage.position).addScaledVector(dir, 10);
+}
+
+/* ---------- AR session ---------- */
+let session = null, hitSource = null, glBinding = null, refSpace = null;
+let placed = false, lastHit = null, anchor = null, hasCam = false;
+let wantPhoto = false, recording = false, recorder = null, chunks = [], recStart = 0;
+const tmpM = new THREE.Matrix4();
+
+async function startAR(){
+  session = await navigator.xr.requestSession('immersive-ar', {
+    requiredFeatures:['hit-test'],
+    optionalFeatures:['dom-overlay','light-estimation','camera-access','anchors'],
+    domOverlay:{root:$('ui')} });
+  await renderer.xr.setSession(session);
+  const gl = renderer.getContext();
+  glBinding = ('XRWebGLBinding' in window) ? new XRWebGLBinding(session, gl) : null;
+  refSpace = renderer.xr.getReferenceSpace();
+  const viewer = await session.requestReferenceSpace('viewer');
+  hitSource = await session.requestHitTestSource({space:viewer});
+  placed = false; stage.visible = false; anchor = null; hasCam = false;
+  $('landing').style.display = 'none'; $('ui').classList.add('on');
+  $('hint').textContent = 'Move your phone to find the ground'; $('hint').classList.remove('off');
+  session.addEventListener('select', onSelect);
+  session.addEventListener('end', onEnd);
+}
+function onEnd(){
+  if (recording) stopRec();
+  session = null; hitSource = null; anchor = null;
+  $('ui').classList.remove('on'); $('landing').style.display = '';
+}
+function onSelect(){
+  if (placed || !lastHit) return;
+  const pose = lastHit.getPose(refSpace); if (!pose) return;
+  tmpM.fromArray(pose.transform.matrix);
+  stage.position.setFromMatrixPosition(tmpM);
+  stage.visible = true; placed = true; reticle.visible = false;
+  $('hint').classList.add('off');
+  if (lastHit.createAnchor) lastHit.createAnchor().then(a => anchor = a).catch(() => {});
+}
+
+renderer.setAnimationLoop((t, frame) => {
+  if (!frame || !session) return;
+  const xrRT = renderer.getRenderTarget();
+
+  // hit test / reticle
+  if (!placed && hitSource){
+    const r = frame.getHitTestResults(hitSource);
+    if (r.length){
+      lastHit = r[0]; const p = lastHit.getPose(refSpace);
+      if (p){ reticle.visible = true; reticle.matrix.fromArray(p.transform.matrix); $('hint').textContent = 'Tap to park the car here'; }
+    } else { reticle.visible = false; lastHit = null; }
+  }
+  if (placed && anchor && frame.trackedAnchors && frame.trackedAnchors.has(anchor)){
+    const p = frame.getPose(anchor.anchorSpace, refSpace);
+    if (p) stage.position.set(p.transform.position.x, p.transform.position.y, p.transform.position.z);
+  }
+  updateSun();
+
+  // camera image
+  const pose = frame.getViewerPose(refSpace);
+  const view = pose && pose.views[0];
+  let tex = null;
+  if (view && view.camera && glBinding && glBinding.getCameraImage){
+    try { tex = glBinding.getCameraImage(view.camera); } catch(e){}
+  }
+
+  if (!tex){
+    // Fallback: no camera access -> browser shows the camera; we only draw the car + shadow (no grading/capture).
+    if (hasCam !== false || !$('bar').dataset.nocam){ hasCam = false; $('bar').dataset.nocam = 1; $('shutter').style.opacity = $('rec').style.opacity = .3; $('bGrade').style.opacity = .3; }
+    bg.visible = false;
+    renderer.setRenderTarget(xrRT);
+    renderer.render(scene, camera);
+    if (!placed){ renderer.clearDepth(); renderer.render(reticleScene, camera); }
+    return;
+  }
+  hasCam = true; bg.visible = true;
+  renderer.properties.get(camTex).__webglTexture = tex;
+
+  const xrCam = renderer.xr.getCamera().cameras[0];
+  const vp = xrCam.viewport;
+  const long = wantPhoto ? PHOTO_LONG_SIDE : REC_LONG_SIDE;
+  sizeTargets(vp.z, vp.w, (wantPhoto || recording) ? long : Math.max(vp.z, vp.w));
+
+  // pass A: camera feed + car, linear, offscreen
+  camera.matrixWorld.copy(xrCam.matrixWorld);
+  camera.matrixWorldInverse.copy(xrCam.matrixWorldInverse);
+  camera.projectionMatrix.copy(xrCam.projectionMatrix);
+  camera.projectionMatrixInverse.copy(xrCam.projectionMatrixInverse);
+  renderer.xr.enabled = false;
+  renderer.setRenderTarget(rtScene); renderer.clear();
+  renderer.render(scene, camera);
+  gradeMat.uniforms.tScene.value = rtScene.texture;
+  applyGrade();
+
+  // pass B1: graded result -> file/video buffer (only when capturing)
+  if (wantPhoto || recording){
+    renderer.setRenderTarget(outRT);
+    renderer.render(quadScene, quadCam);
+    readOut();
+    if (wantPhoto){ wantPhoto = false; outCanvas.toBlob(b => saveBlob(b, `car-ar-${Date.now()}.jpg`), 'image/jpeg', .95); }
+  }
+  renderer.xr.enabled = true;
+
+  // pass B2: graded result -> screen
+  renderer.setRenderTarget(xrRT);
+  renderer.render(quadScene, quadCam);
+  if (!placed){ renderer.clearDepth(); renderer.render(reticleScene, camera); }
+});
+
+/* ---------- capture ---------- */
+function saveBlob(blob, name){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = name; a.click();
+  if (blob.type.startsWith('image')){ const t = $('thumb'); t.src = url; t.classList.add('on'); t.onclick = () => window.open(url); }
+  else { $('hint').classList.remove('off'); $('hint').textContent = 'Video saved to Downloads'; setTimeout(() => $('hint').classList.add('off'), 2500); }
+}
+async function startRec(){
+  const stream = outCanvas.captureStream(30);
+  try { const a = await navigator.mediaDevices.getUserMedia({audio:true}); a.getAudioTracks().forEach(tr => stream.addTrack(tr)); } catch(e){}
+  const type = ['video/mp4;codecs=avc1','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'].find(t => MediaRecorder.isTypeSupported(t));
+  recorder = new MediaRecorder(stream, {mimeType:type, videoBitsPerSecond:10_000_000});
+  chunks = []; recorder.ondataavailable = e => e.data.size && chunks.push(e.data);
+  recorder.onstop = () => {
+    stream.getTracks().forEach(tr => tr.stop());
+    const ext = recorder.mimeType.includes('mp4') ? 'mp4' : 'webm';
+    saveBlob(new Blob(chunks,{type:recorder.mimeType}), `car-ar-${Date.now()}.${ext}`);
+  };
+  recorder.start(1000); recording = true; recStart = performance.now();
+  $('rec').classList.add('on'); $('timer').classList.add('on');
+  const tick = () => { if (!recording) return; const s = Math.floor((performance.now()-recStart)/1000);
+    $('timer').textContent = `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`; setTimeout(tick, 500); };
+  tick();
+}
+function stopRec(){ recording = false; recorder && recorder.state !== 'inactive' && recorder.stop();
+  $('rec').classList.remove('on'); $('timer').classList.remove('on'); }
+
+/* ---------- UI ---------- */
+document.querySelectorAll('.hit').forEach(el => el.addEventListener('beforexrselect', e => e.preventDefault()));
+const ROWS = [
+  ['exposure','Exposure',-2,2,.05],['contrast','Contrast',.6,1.5,.01],['saturation','Saturation',0,2,.01],
+  ['temp','Temperature',-1,1,.01],['tint','Tint',-1,1,.01],['highlights','Highlights',-1,1,.01],
+  ['shadows','Shadows',-1,1,.01],['vignette','Vignette',0,1,.01]];
+const DEFAULT = {...G};
+const PRESETS = {
+  Natural:{},
+  Cinematic:{exposure:-.15,contrast:1.18,saturation:.85,temp:-.15,tint:.05,highlights:-.25,shadows:.15,vignette:.35},
+  Vivid:{contrast:1.12,saturation:1.4,highlights:-.1,shadows:.1},
+  Warm:{temp:.4,tint:.05,saturation:1.1,contrast:1.05},
+  Mono:{saturation:0,contrast:1.2,vignette:.25}};
+const inputs = {};
+ROWS.forEach(([k,label,min,max,step]) => {
+  const row = document.createElement('div'); row.className = 'row';
+  row.innerHTML = `<label>${label}</label><input type="range" min="${min}" max="${max}" step="${step}" value="${G[k]}"><output></output>`;
+  const inp = row.querySelector('input'), out = row.querySelector('output');
+  const upd = () => { G[k] = +inp.value; out.textContent = (+inp.value).toFixed(2); };
+  inp.addEventListener('input', upd); upd(); inputs[k] = {inp, upd};
+  $('gradeRows').appendChild(row);
+});
+function setGrade(o){ Object.assign(G, DEFAULT, o); for (const k in inputs){ inputs[k].inp.value = G[k]; inputs[k].upd(); } }
+Object.keys(PRESETS).forEach(n => { const b = document.createElement('button'); b.textContent = n; b.onclick = () => { setGrade(PRESETS[n]); document.querySelectorAll('#presets button').forEach(x => x.classList.toggle('sel', x === b)); }; $('presets').appendChild(b); });
+$('resetGrade').onclick = () => setGrade({});
+document.addEventListener('click', e => {            // small jump on every button press
+  const b = e.target.closest('button'); if (!b) return;
+  b.classList.remove('jump'); void b.offsetWidth; b.classList.add('jump');
+});
+document.addEventListener('animationend', e => e.target.classList && e.target.classList.remove('jump'));
+$('flip').onclick = () => bgMat.uniforms.uFlip.value = 1 - bgMat.uniforms.uFlip.value;
+
+function toggle(p, btn){ const on = !$(p).classList.contains('on');
+  ['pGrade','pCar'].forEach(x => $(x).classList.remove('on')); ['bGrade','bCar'].forEach(x => $(x).classList.remove('act'));
+  if (on){ $(p).classList.add('on'); btn.classList.add('act'); } }
+$('bGrade').onclick = e => toggle('pGrade', e.currentTarget);
+$('bCar').onclick = e => toggle('pCar', e.currentTarget);
+$('rot').oninput = e => { yaw.rotation.y = THREE.MathUtils.degToRad(+e.target.value); e.target.nextElementSibling.textContent = e.target.value + '°'; };
+$('scl').oninput = e => { stage.scale.setScalar(+e.target.value); e.target.nextElementSibling.textContent = (+e.target.value).toFixed(2) + '×'; };
+$('replace').onclick = () => { placed = false; anchor = null; stage.visible = false; $('pCar').classList.remove('on'); $('bCar').classList.remove('act');
+  $('hint').classList.remove('off'); $('hint').textContent = 'Move your phone to find the ground'; };
+$('shutter').onclick = () => { if (hasCam) wantPhoto = true; };
+$('rec').onclick = () => { if (!hasCam) return; recording ? stopRec() : startRec(); };
+$('bExit').onclick = () => session && session.end();
+$('start').onclick = () => startAR().catch(e => { $('msg').textContent = 'Could not start AR: ' + e.message; });
+
+async function setStart(){
+  const btn = $('start');
+  let supported = false;
+  try { supported = !!navigator.xr && await navigator.xr.isSessionSupported('immersive-ar'); }
+  catch (e) {
+    // The page is inside an iframe/preview that does not allow WebXR (permissions policy).
+    xrBlocked = true;
+    btn.disabled = false; btn.textContent = 'Open in a new tab';
+    $('msg').textContent = 'AR is blocked inside previews and embedded frames. Open the deployed page (GitHub Pages) directly in Chrome.';
+    btn.onclick = () => window.open(location.href, '_blank', 'noopener');
+    return;
+  }
+  if (!supported){
+    $('landing').style.display = 'none'; $('fallback').style.display = 'flex';   // iOS Quick Look / Scene Viewer / desktop viewer
+    import('https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js').catch(console.error);
+    return;
+  }
+  xrOK = true;
+  if (modelReady){ btn.disabled = false; btn.textContent = 'Start AR'; }
+}
+setStart();
+addEventListener('resize', () => renderer.setSize(innerWidth, innerHeight));
+</script>
+</body>
+</html>
