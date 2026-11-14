@@ -77,6 +77,55 @@
   #arBtn{position:absolute;left:50%;bottom:calc(70px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--white);color:#111;font-weight:600;padding:0 26px;height:52px;border-radius:16px}
   #arBtn:active{transform:translateX(-50%) scale(.95)}
   @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+  [hidden]{display:none!important}
+  #ui{z-index:2}#landing,#fallback{z-index:3}
+  .alt{height:52px;border-radius:16px;width:100%;margin-top:10px;font-weight:500;border:1px solid var(--line);color:var(--ink)}
+  #landing{display:none!important}
+  #top{position:absolute;top:calc(10px + env(safe-area-inset-top));left:12px;right:12px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+  #top .grp{display:flex;gap:8px}
+  .tbtn{height:40px;min-width:40px;padding:0 11px;border-radius:12px;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:600}
+  .tbtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .tbtn.act{background:var(--white);color:#111;border-color:var(--white)}
+  .sw{height:40px;padding:0 12px;border-radius:12px;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;cursor:pointer;transition:transform .14s var(--inout)}
+  .sw:active{transform:scale(.94)}
+  .sw input{display:none}
+  .sw i{width:38px;height:22px;border-radius:11px;background:var(--line);position:relative;transition:background-color .3s var(--out)}
+  .sw i::after{content:"";position:absolute;left:2px;top:2px;width:18px;height:18px;border-radius:50%;background:var(--white);transition:transform .45s var(--spring),background-color .3s var(--out)}
+  .sw input:checked+i{background:var(--white)}
+  .sw input:checked+i::after{transform:translateX(16px);background:#111}
+  #hist{position:absolute;left:12px;top:calc(60px + env(safe-area-inset-top));width:84px;height:36px;border-radius:8px;background:var(--surface);border:1px solid var(--line);transition:opacity .3s var(--out)}
+  #grid{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .35s var(--out)}
+  #grid.on{opacity:1}
+  #grid b{position:absolute;background:#ffffff80}
+  #grid b:nth-child(1),#grid b:nth-child(2){top:0;bottom:0;width:1px}
+  #grid b:nth-child(3),#grid b:nth-child(4){left:0;right:0;height:1px}
+  #grid b:nth-child(1){left:33.333%}#grid b:nth-child(2){left:66.666%}#grid b:nth-child(3){top:33.333%}#grid b:nth-child(4){top:66.666%}
+  #level{position:absolute;left:50%;top:50%;width:90px;height:2px;background:var(--white);opacity:0;transition:opacity .3s var(--out),background-color .3s var(--out)}
+  #level.ok{background:#3ddc84}
+  #focusRing{position:absolute;width:72px;height:72px;margin:-36px 0 0 -36px;border:2px solid var(--white);border-radius:20px;opacity:0;pointer-events:none}
+  #focusRing.show{animation:focus .9s both}
+  @keyframes focus{0%{opacity:0;transform:scale(1.5);animation-timing-function:cubic-bezier(.2,.9,.3,1)}25%{opacity:1;transform:scale(1)}80%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.95)}}
+  #count{position:absolute;inset:0;display:grid;place-items:center;font-size:120px;font-weight:600;pointer-events:none;opacity:0;text-shadow:0 2px 14px #0009}
+  #count.pop{animation:cpop 1s both}
+  @keyframes cpop{0%{opacity:0;transform:scale(1.6);animation-timing-function:cubic-bezier(.2,.9,.3,1)}20%{opacity:1;transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:scale(.9)}}
+  #shot{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+  #shot.go{animation:flash .35s var(--out)}
+  @keyframes flash{0%{opacity:.85}100%{opacity:0}}
+  #hint{top:calc(110px + env(safe-area-inset-top))}
+  #timer{top:calc(152px + env(safe-area-inset-top))}
+  #bar{padding:12px 28px calc(18px + env(safe-area-inset-bottom))}
+  #bar #thumb{position:static;width:52px;height:52px;border-radius:14px;opacity:1;transform:none;pointer-events:auto;border:1px solid var(--line);background:var(--surface2);object-fit:cover}
+  #bar #thumb.on{border:2px solid var(--white)}
+  #modes{position:absolute;left:0;right:0;bottom:calc(112px + env(safe-area-inset-bottom));display:flex;justify-content:center;gap:4px}
+  #modes button{padding:7px 14px;border-radius:10px;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+  #modes button.sel{color:var(--ink);background:var(--surface)}
+  #dock{position:absolute;left:0;right:0;bottom:calc(152px + env(safe-area-inset-bottom));display:flex;justify-content:center;gap:8px}
+  #dock .chip{width:auto;height:40px;flex-direction:row;padding:0 14px;border-radius:14px;gap:8px;font-size:13px}
+  #ui.vid #shutter::after{background:var(--rec)}
+  #shutter.rec::after{border-radius:16px;transform:scale(.55)}
+  #ui .panel{bottom:calc(200px + env(safe-area-inset-bottom));max-height:40vh}
+  .note{color:var(--dim);font-size:13px;margin:4px 0 8px}
+  #ui.arx .camonly,#ui.arx .proonly,#ui:not(.ar) .aronly{display:none}
 </style>
 </head>
 <body>
@@ -84,6 +133,7 @@
   <h1>Car AR</h1>
   <p>Point at the road and tap to park the car. Walk around it, then shoot photos or video with color grading.</p>
   <button id="start" disabled>Loading car…</button>
+  <button id="alt" class="alt" hidden>Open phone AR viewer</button>
   <div id="msg"></div>
 </div>
 
@@ -96,26 +146,58 @@
 </div>
 
 <div id="ui">
-  <div id="hint">Move your phone to find the ground</div>
+  <div id="grid" class="camonly"><b></b><b></b><b></b><b></b></div>
+  <div id="level" class="camonly"></div>
+  <div id="focusRing"></div>
+  <div id="count"></div>
+  <div id="shot"></div>
+  <div id="top">
+    <div class="grp camonly">
+      <button class="tbtn hit" id="bFlash" aria-label="Flash"><svg viewBox="0 0 24 24"><path d="M13 3L5 14h6l-1 7 8-11h-6l1-7z"/></svg></button>
+      <button class="tbtn hit" id="bTimer" aria-label="Timer"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="7"/><path d="M12 9v4l2 2M10 3h4"/></svg><b>Off</b></button>
+      <button class="tbtn hit" id="bGrid" aria-label="Grid"><svg viewBox="0 0 24 24"><path d="M9 4v16M15 4v16M4 9h16M4 15h16"/></svg></button>
+      <button class="tbtn hit" id="bRes" aria-label="Resolution">FHD</button>
+    </div>
+    <label class="sw hit"><span>AR</span><input type="checkbox" id="arSw"><i></i></label>
+  </div>
+  <canvas id="hist" class="camonly" width="84" height="36"></canvas>
+  <div id="hint" class="off">Move your phone to find the ground</div>
   <div id="timer">0:00</div>
-  <img id="thumb" class="hit" alt="Last capture">
+  <div class="panel hit" id="pLook">
+    <div class="presets" id="looks"></div>
+    <div class="row"><label>Strength</label><input type="range" id="lutAmt" min="0" max="1" step="0.01" value="1"><output>1.00</output></div>
+    <button class="btn" id="impLut">Import .cube LUT</button><input type="file" id="lutFile" accept=".cube" hidden>
+  </div>
   <div class="panel hit" id="pGrade">
-    <div class="presets" id="presets"></div>
+    <div class="presets" id="presets" hidden></div>
     <div id="gradeRows"></div>
     <button class="btn" id="flip">Flip camera feed</button>
     <button class="btn" id="resetGrade">Reset</button>
   </div>
+  <div class="panel hit" id="pPro">
+    <div id="proRows"></div>
+    <div class="presets">
+      <button class="btn" id="aAuto">Auto</button><button class="btn" id="aPeak">Peaking</button><button class="btn" id="aZebra">Zebra</button><button class="btn sel" id="aHist">Histogram</button>
+    </div>
+  </div>
   <div class="panel hit" id="pCar">
     <div class="row"><label>Rotate</label><input type="range" id="rot" min="-180" max="180" value="0"><output>0°</output></div>
     <div class="row"><label>Size</label><input type="range" id="scl" min="0.3" max="2" step="0.01" value="1"><output>1.00×</output></div>
+    <div class="row" id="rowDist" hidden><label>Distance</label><input type="range" id="dist" min="0.5" max="2" step="0.01" value="1"><output>1.00×</output></div>
     <button class="btn" id="replace">Re-place car</button>
   </div>
+  <div id="dock">
+    <button class="chip hit" id="bLook"><svg viewBox="0 0 24 24"><circle cx="9" cy="12" r="5"/><circle cx="15" cy="12" r="5"/></svg>Look</button>
+    <button class="chip hit" id="bGrade"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>Adjust</button>
+    <button class="chip hit proonly" id="bPro"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v3M12 17v3M4 12h3M17 12h3M12 12l3-3"/></svg>Pro</button>
+    <button class="chip hit aronly" id="bCar"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3zM12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>Model</button>
+  </div>
+  <div id="modes"><button class="hit sel" data-m="photo">Photo</button><button class="hit" data-m="video">Video</button></div>
   <div id="bar">
-    <button class="chip hit" id="bCar"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3zM12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>Model</button>
-    <button class="chip hit" id="bGrade"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>Grade</button>
-    <button class="hit" id="shutter" aria-label="Take photo"></button>
-    <button class="hit" id="rec" aria-label="Record video"><i></i></button>
-    <button class="chip hit" id="bExit"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>Exit</button>
+    <img id="thumb" class="hit" alt="Last capture" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=">
+    <button class="hit" id="shutter" aria-label="Shutter"></button>
+    <button class="chip hit camonly" id="bFlip" aria-label="Switch camera"><svg viewBox="0 0 24 24"><path d="M20 7v4h-4M4 17v-4h4M6.5 9A7 7 0 0 1 19 11M17.5 15A7 7 0 0 1 5 13"/></svg></button>
+    <button id="rec" hidden></button>
   </div>
 </div>
 
@@ -127,6 +209,7 @@ import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {DRACOLoader} from 'three/addons/loaders/DRACOLoader.js';
 import {MeshoptDecoder} from 'three/addons/libs/meshopt_decoder.module.js';
+import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 import {XREstimatedLight} from 'three/addons/webxr/XREstimatedLight.js';
 
 const $ = id => document.getElementById(id);
@@ -183,7 +266,10 @@ async function loadGlb(url, loader, onLoad, onProgress, onError){
   } catch (e) { onError(e); }
 }
 let modelReady = false, xrOK = false, xrBlocked = false;
-{
+let resolveModel, rejectModel, modelStarted = false;
+const modelP = new Promise((res, rej) => { resolveModel = res; rejectModel = rej; }); modelP.catch(() => {});
+function loadModel(){
+  if (modelStarted) return modelP; modelStarted = true;
   const draco = new DRACOLoader().setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
   const loader = new GLTFLoader().setDRACOLoader(draco).setMeshoptDecoder(MeshoptDecoder);
   loadGlb('./car.glb', loader, gltf => {
@@ -196,19 +282,20 @@ let modelReady = false, xrOK = false, xrBlocked = false;
     m.scale.setScalar(k);
     m.position.set(-c.x*k, -box.min.y*k, -c.z*k);   // centred, wheels on the ground
     yaw.add(m);
-    modelReady = true;
+    modelReady = true; resolveModel();
     if (xrOK){ $('start').disabled = false; $('start').textContent = 'Start AR'; }
   }, e => { if (e.total && !xrBlocked) $('start').textContent = `Loading car… ${Math.min(100, Math.round(e.loaded/e.total*100))}%`; },
-  err => { $('msg').textContent = 'Could not load car.glb — it must sit next to index.html in the repo root.'; console.error(err); });
+  err => { $('msg').textContent = 'Could not load car.glb — it must sit next to index.html in the repo root.'; rejectModel(new Error('car.glb not found next to index.html')); console.error(err); });
+  return modelP;
 }
 
 /* ---------- camera feed + grading pipeline ---------- */
 const camTex = new THREE.Texture();                       // wraps the XR camera image
 const bgMat = new THREE.ShaderMaterial({
-  uniforms:{tCam:{value:camTex}, uFlip:{value:0}},
+  uniforms:{tCam:{value:camTex}, uFlip:{value:0}, uCrop:{value:new THREE.Vector2(1,1)}},
   vertexShader:`varying vec2 v; void main(){ v = position.xy*.5+.5; gl_Position = vec4(position.xy,1.,1.); }`,
-  fragmentShader:`uniform sampler2D tCam; uniform float uFlip; varying vec2 v;
-    void main(){ vec2 u = vec2(v.x, mix(v.y, 1.-v.y, uFlip)); vec3 c = texture2D(tCam,u).rgb;
+  fragmentShader:`uniform sampler2D tCam; uniform float uFlip; uniform vec2 uCrop; varying vec2 v;
+    void main(){ vec2 w = (v-.5)*uCrop+.5; vec2 u = vec2(w.x, mix(w.y, 1.-w.y, uFlip)); vec3 c = texture2D(tCam,u).rgb;
       gl_FragColor = vec4(pow(c, vec3(2.2)), 1.); }`,
   depthTest:false, depthWrite:false });
 const bg = new THREE.Mesh(new THREE.PlaneGeometry(2,2), bgMat);
@@ -217,13 +304,18 @@ scene.add(bg);
 
 const G = {exposure:0, contrast:1, saturation:1, temp:0, tint:0, highlights:0, shadows:0, vignette:0};
 const gradeMat = new THREE.ShaderMaterial({
-  uniforms:{tScene:{value:null}, g1:{value:new THREE.Vector4()}, g2:{value:new THREE.Vector4()}},
+  uniforms:{tScene:{value:null}, uSrgb:{value:0}, tLut:{value:null}, uLut:{value:0}, uLutSize:{value:17}, uAssist:{value:0}, uPeak:{value:0}, uZebra:{value:0}, uTexel:{value:new THREE.Vector2(1/1280,1/720)}, g1:{value:new THREE.Vector4()}, g2:{value:new THREE.Vector4()}},
   vertexShader:`varying vec2 v; void main(){ v = position.xy*.5+.5; gl_Position = vec4(position.xy,0.,1.); }`,
-  fragmentShader:`uniform sampler2D tScene; uniform vec4 g1; uniform vec4 g2; varying vec2 v;
+  fragmentShader:`uniform sampler2D tScene; uniform sampler2D tLut; uniform float uSrgb, uLut, uLutSize, uAssist, uPeak, uZebra; uniform vec2 uTexel; uniform vec4 g1; uniform vec4 g2; varying vec2 v;
     // g1 = exposure, contrast, saturation, temp   g2 = tint, highlights, shadows, vignette
+    vec3 lut3(vec3 c){ float n = uLutSize; c = clamp(c,0.,1.)*(n-1.);
+      float b0 = floor(c.b), b1 = min(b0+1., n-1.);
+      vec2 u0 = vec2((b0*n+c.r+.5)/(n*n), (c.g+.5)/n), u1 = vec2((b1*n+c.r+.5)/(n*n), (c.g+.5)/n);
+      return mix(texture2D(tLut,u0).rgb, texture2D(tLut,u1).rgb, fract(c.b)); }
+    float lm(vec2 p){ return dot(pow(texture2D(tScene,p).rgb, vec3(1./2.2)), vec3(.2126,.7152,.0722)); }
     vec3 soft(vec3 x){ vec3 o = max(x-.8,0.); return min(x,.8) + .2*tanh(o/.2); }
     void main(){
-      vec3 c = texture2D(tScene,v).rgb * exp2(g1.x);
+      vec3 c = texture2D(tScene,v).rgb; c = mix(c, pow(c, vec3(2.2)), uSrgb); c *= exp2(g1.x);
       c *= vec3(1.+g1.w*.18, 1.-g2.x*.12, 1.-g1.w*.18);
       c = pow(soft(max(c,0.)), vec3(1./2.2));
       float l = dot(c, vec3(.2126,.7152,.0722));
@@ -231,7 +323,12 @@ const gradeMat = new THREE.ShaderMaterial({
       c = (c-.5)*g1.y + .5;
       l = dot(c, vec3(.2126,.7152,.0722));
       c = mix(vec3(l), c, g1.z);
+      c = mix(c, lut3(c), uLut);
       c *= 1. - g2.w*smoothstep(.35,1.,length(v-.5)*1.5);
+      if (uAssist > .5){
+        if (uPeak > .5){ float e = abs(lm(v+vec2(uTexel.x,0.))-lm(v-vec2(uTexel.x,0.))) + abs(lm(v+vec2(0.,uTexel.y))-lm(v-vec2(0.,uTexel.y))); if (e > .09) c = vec3(.35,1.,.3); }
+        if (uZebra > .5 && dot(c,vec3(.2126,.7152,.0722)) > .94) c = mix(c, vec3(1.), .55*step(.5, fract((gl_FragCoord.x+gl_FragCoord.y)*.03)));
+      }
       gl_FragColor = vec4(clamp(c,0.,1.),1.);
     }`,
   depthTest:false, depthWrite:false });
@@ -312,7 +409,9 @@ async function startAR(){
   refSpace = renderer.xr.getReferenceSpace();
   const viewer = await session.requestReferenceSpace('viewer');
   hitSource = await session.requestHitTestSource({space:viewer});
+  lite = false; bgMat.uniforms.tCam.value = camTex; bgMat.uniforms.uCrop.value.set(1,1);
   placed = false; stage.visible = false; anchor = null; hasCam = false;
+  renderer.domElement.style.display = 'none'; renderer.setPixelRatio(1);
   $('landing').style.display = 'none'; $('ui').classList.add('on');
   $('hint').textContent = 'Move your phone to find the ground'; $('hint').classList.remove('off');
   session.addEventListener('select', onSelect);
@@ -321,7 +420,7 @@ async function startAR(){
 function onEnd(){
   if (recording) stopRec();
   session = null; hitSource = null; anchor = null;
-  $('ui').classList.remove('on'); $('landing').style.display = '';
+  $('arSw').checked = false; $('ui').classList.remove('ar','arx'); $('rowDist').hidden = true; startCam();
 }
 function onSelect(){
   if (placed || !lastHit) return;
@@ -334,6 +433,7 @@ function onSelect(){
 }
 
 renderer.setAnimationLoop((t, frame) => {
+  if (lite){ liteFrame(); return; }
   if (!frame || !session) return;
   const xrRT = renderer.getRenderTarget();
 
@@ -402,6 +502,179 @@ renderer.setAnimationLoop((t, frame) => {
   if (!placed){ renderer.clearDepth(); renderer.render(reticleScene, camera); }
 });
 
+/* ---------- Lite mode: any phone with a camera + gyro (no SLAM) ---------- */
+let lite = false, liteStream = null, video = null, orient = null, litePos = new THREE.Vector3(), liteDist = 1, lastSample = 0;
+const CAM_HEIGHT = 1.5;                       // assumed phone height above the ground (metres)
+const zee = new THREE.Vector3(0,0,1), eul = new THREE.Euler(), qa = new THREE.Quaternion(), q1 = new THREE.Quaternion(-Math.SQRT1_2,0,0,Math.SQRT1_2);
+const sampler = document.createElement('canvas'); sampler.width = sampler.height = 8;
+const sctx = sampler.getContext('2d', {willReadFrequently:true});
+const onOrient = e => { if (e.alpha != null) orient = e; };
+const rad = THREE.MathUtils.degToRad;
+
+async function startLite(){
+  if (window.DeviceOrientationEvent && DeviceOrientationEvent.requestPermission){
+    if (await DeviceOrientationEvent.requestPermission() !== 'granted') throw new Error('Motion access was denied');
+  }
+  liteStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}, width:{ideal:1920}, height:{ideal:1080}}, audio:false});
+  video = document.createElement('video'); video.playsInline = true; video.muted = true; video.srcObject = liteStream; await video.play();
+  bgMat.uniforms.tCam.value = new THREE.VideoTexture(video);
+  scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), .04).texture;
+  addEventListener('deviceorientation', onOrient);
+  lite = true; hasCam = true; placed = false; stage.visible = false; orient = null;
+  $('shutter').style.opacity = $('rec').style.opacity = $('bGrade').style.opacity = ''; delete $('bar').dataset.nocam;
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setSize(innerWidth, innerHeight);
+  Object.assign(renderer.domElement.style, {display:'block', position:'fixed', inset:'0', width:'100%', height:'100%', zIndex:'0'});
+  $('rowDist').hidden = false;
+  $('landing').style.display = 'none'; $('ui').classList.add('on');
+  $('hint').classList.remove('off'); $('hint').textContent = 'Aim at the ground and tap to park the car';
+}
+function stopLite(){
+  if (recording) stopRec();
+  lite = false; liteStream && liteStream.getTracks().forEach(t => t.stop());
+  removeEventListener('deviceorientation', onOrient);
+  renderer.domElement.style.display = 'none'; scene.environment = null; bgMat.uniforms.tCam.value = camTex; bgMat.uniforms.uCrop.value.set(1,1);
+  $('rowDist').hidden = true; $('ui').classList.remove('on'); $('landing').style.display = '';
+}
+function groundPoint(nx, ny, cam = camera){           // screen NDC -> point on the ground plane (y = 0)
+  const o = new THREE.Vector3().setFromMatrixPosition(cam.matrixWorld);
+  const d = new THREE.Vector3(nx, ny, .5).unproject(cam).sub(o).normalize();
+  if (d.y > -0.03) return null;
+  const t = -o.y / d.y; if (t > 40) return null;
+  return o.addScaledVector(d, t);
+}
+renderer.domElement.addEventListener('pointerup', e => {
+  if (!((lite && arOn) || w8) || placed) return;
+  const pt = groundPoint(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight * 2 - 1), w8 ? cam8 : camera);
+  if (!pt){ $('hint').textContent = 'Aim lower, at the ground'; return; }
+  litePos.copy(pt); liteDist = 1; $('dist').value = 1; $('dist').nextElementSibling.textContent = '1.00×';
+  stage.position.copy(pt); stage.visible = true; placed = true; reticle.visible = false; $('hint').classList.add('off');
+});
+function adaptLight(src){                           // match car lighting to the camera image
+  sctx.drawImage(src, 0, 0, 8, 8);
+  const d = sctx.getImageData(0, 0, 8, 8).data; let r = 0, g = 0, b = 0;
+  for (let i = 0; i < d.length; i += 4){ r += d[i]; g += d[i+1]; b += d[i+2]; }
+  r /= 64*255; g /= 64*255; b /= 64*255;
+  const lum = Math.max(.05, .2126*r + .7152*g + .0722*b), k = Math.min(1.6, Math.max(.25, lum*2.2));
+  const tint = [r, g, b].map(c => Math.min(1.15, Math.max(.7, c / lum)));
+  hemi.color.setRGB(...tint); sun.color.setRGB(...tint);
+  hemi.intensity = .35 + k*.8; sun.intensity = .4 + k*2.2;
+  shadowPlane.material.opacity = .2 + Math.min(1, lum*2) * .35;
+  yaw.traverse(o => { if (o.isMesh) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => m.envMapIntensity = k*.8); });
+}
+function liteFrame(){
+  const w = innerWidth, h = innerHeight, asp = w / h, dpr = renderer.getPixelRatio();
+  if (renderer.domElement.width !== Math.round(w*dpr)) renderer.setSize(w, h);
+  camera.aspect = asp; camera.near = .05; camera.far = 200;
+  camera.fov = asp < 1 ? 70 : 2 * THREE.MathUtils.radToDeg(Math.atan(Math.tan(rad(35)) / asp));   // ~70° across the long side
+  camera.updateProjectionMatrix();
+  if (!arOn) qa.identity();
+  else if (orient){
+    const o = rad((screen.orientation && screen.orientation.angle) || window.orientation || 0);
+    eul.set(rad(orient.beta), rad(orient.alpha), -rad(orient.gamma), 'YXZ');
+    qa.setFromEuler(eul).multiply(q1).multiply(new THREE.Quaternion().setFromAxisAngle(zee, -o));
+  }
+  camera.matrixWorld.compose(new THREE.Vector3(0, CAM_HEIGHT, 0), qa, new THREE.Vector3(1,1,1));
+  camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
+  const va = video.videoWidth / (video.videoHeight || 1);
+  bgMat.uniforms.uCrop.value.set((facing === 'user' ? -1 : 1) * (asp > va ? 1 : asp / va), asp > va ? va / asp : 1);
+  if (assists.hist && performance.now() - lastHist > 250){ lastHist = performance.now(); try { drawHist(); } catch(e){} }
+  updateLevel();
+  bg.visible = true;
+  if (arOn && performance.now() - lastSample > 400){ lastSample = performance.now(); try { adaptLight(video); } catch(e){} }
+  if (!arOn){ stage.visible = false; reticle.visible = false; }
+  else if (placed) stage.position.copy(litePos).multiplyScalar(liteDist);
+  else {
+    const pt = groundPoint(0, 0);
+    reticle.visible = !!pt; if (pt) reticle.matrix.makeTranslation(pt.x, pt.y, pt.z);
+  }
+  if (arOn) updateSun();
+
+  let tw = w*dpr, th = h*dpr, lng = Math.max(tw, th);
+  if (wantPhoto){                                   // photos use the camera's native resolution
+    if (asp > va){ tw = video.videoWidth; th = tw / asp; } else { th = video.videoHeight; tw = th * asp; }
+    lng = 1e5;
+  }
+  sizeTargets(tw, th, lng);
+  gradeMat.uniforms.uTexel.value.set(1/rtW, 1/rtH);
+  renderer.setRenderTarget(rtScene); renderer.clear(); renderer.render(scene, camera);
+  gradeMat.uniforms.tScene.value = rtScene.texture; gradeMat.uniforms.uSrgb.value = 0; applyGrade();
+  if (wantPhoto){
+    gradeMat.uniforms.uAssist.value = 0;
+    renderer.setRenderTarget(outRT); renderer.render(quadScene, quadCam); readOut();
+    wantPhoto = false; outCanvas.toBlob(b => saveBlob(b, `IMG_${Date.now()}.jpg`), 'image/jpeg', .96);
+  }
+  gradeMat.uniforms.uAssist.value = recording ? 0 : 1;
+  renderer.setRenderTarget(null); renderer.clear(); renderer.render(quadScene, quadCam);
+  if (arOn && !placed){ renderer.clearDepth(); renderer.render(reticleScene, camera); }
+  gradeMat.uniforms.uAssist.value = 0;
+}
+
+/* ---------- SLAM mode: 8th Wall engine (works without ARCore/ARKit, absolute scale) ---------- */
+let w8 = false, cam8 = null, xrCanvas = null, srcTex = null, engineReady = null;
+function loadEngine(){
+  window.THREE = {...THREE};                                  // the engine renders its scene with a global THREE
+  return new Promise((res, rej) => {
+    if (window.XR8) return res();
+    window.addEventListener('xrloaded', () => res(), {once:true});
+    const sc = document.createElement('script');
+    sc.src = 'https://cdn.jsdelivr.net/npm/@8thwall/engine-binary@1/dist/xr.js';
+    sc.async = true; sc.crossOrigin = 'anonymous'; sc.dataset.preloadChunks = 'slam';
+    sc.onerror = () => rej(new Error('Could not load the tracking engine'));
+    document.head.appendChild(sc);
+  });
+}
+function sizeXrCanvas(){
+  const dpr = Math.min(devicePixelRatio, 1.5);
+  xrCanvas.width = Math.round(innerWidth*dpr); xrCanvas.height = Math.round(innerHeight*dpr);
+}
+async function startW8(){
+  await engineReady;
+  xrCanvas = document.createElement('canvas');
+  Object.assign(xrCanvas.style, {position:'fixed', left:0, top:0, width:'100%', height:'100%', opacity:0, pointerEvents:'none', zIndex:-1});
+  document.body.appendChild(xrCanvas); sizeXrCanvas();
+  XR8.XrController.configure({scale:'absolute'});
+  XR8.addCameraPipelineModules([
+    XR8.GlTextureRenderer.pipelineModule(),     // camera feed
+    XR8.Threejs.pipelineModule(),               // three.js scene that follows the SLAM pose
+    XR8.XrController.pipelineModule(),          // world tracking
+    {name:'car-ar',
+      onStart: () => {
+        const {scene: s8, camera: c8, renderer: r8} = XR8.Threejs.xrScene();
+        cam8 = c8;
+        r8.shadowMap.enabled = true; r8.shadowMap.type = THREE.PCFSoftShadowMap;
+        s8.environment = new THREE.PMREMGenerator(r8).fromScene(new RoomEnvironment(), .04).texture;
+        s8.add(hemi, sun, sun.target, stage, reticle);
+        c8.position.set(0, 1.5, 0);
+        XR8.XrController.updateCameraProjectionMatrix({origin: c8.position, facing: c8.quaternion});
+        srcTex = new THREE.CanvasTexture(xrCanvas); srcTex.generateMipmaps = false; srcTex.minFilter = THREE.LinearFilter;
+      },
+      onUpdate: () => {
+        if (!placed){
+          const pt = groundPoint(0, 0, cam8);
+          reticle.visible = !!pt; if (pt) reticle.matrix.makeTranslation(pt.x, pt.y, pt.z);
+        }
+        updateSun();
+      },
+      onRender: () => {                         // runs right after the engine drew camera + car into its canvas
+        if (renderer.domElement.width !== xrCanvas.width || renderer.domElement.height !== xrCanvas.height)
+          renderer.setSize(xrCanvas.width, xrCanvas.height, false);
+        if (performance.now() - lastSample > 400){ lastSample = performance.now(); try { adaptLight(xrCanvas); } catch(e){} }
+        srcTex.needsUpdate = true;
+        gradeMat.uniforms.tScene.value = srcTex; gradeMat.uniforms.uSrgb.value = 1; applyGrade();
+        renderer.setRenderTarget(null); renderer.render(quadScene, quadCam);
+        if (wantPhoto){ wantPhoto = false; renderer.domElement.toBlob(b => saveBlob(b, `car-ar-${Date.now()}.jpg`), 'image/jpeg', .95); }
+      },
+      onException: e => console.error(e)}
+  ]);
+  w8 = true; hasCam = true; placed = false; stage.visible = false;
+  $('shutter').style.opacity = $('rec').style.opacity = $('bGrade').style.opacity = ''; delete $('bar').dataset.nocam;
+  renderer.setPixelRatio(1);
+  Object.assign(renderer.domElement.style, {display:'block', position:'fixed', inset:'0', width:'100%', height:'100%', zIndex:'0'});
+  $('landing').style.display = 'none'; $('ui').classList.add('on');
+  $('hint').classList.remove('off'); $('hint').textContent = 'Move the phone slowly forward and back, then tap the ground';
+  XR8.run({canvas: xrCanvas});
+}
+
 /* ---------- capture ---------- */
 function saveBlob(blob, name){
   const url = URL.createObjectURL(blob);
@@ -410,7 +683,7 @@ function saveBlob(blob, name){
   else { $('hint').classList.remove('off'); $('hint').textContent = 'Video saved to Downloads'; setTimeout(() => $('hint').classList.add('off'), 2500); }
 }
 async function startRec(){
-  const stream = outCanvas.captureStream(30);
+  const stream = (w8 || lite ? renderer.domElement : outCanvas).captureStream(30);
   try { const a = await navigator.mediaDevices.getUserMedia({audio:true}); a.getAudioTracks().forEach(tr => stream.addTrack(tr)); } catch(e){}
   const type = ['video/mp4;codecs=avc1','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'].find(t => MediaRecorder.isTypeSupported(t));
   recorder = new MediaRecorder(stream, {mimeType:type, videoBitsPerSecond:10_000_000});
@@ -421,13 +694,13 @@ async function startRec(){
     saveBlob(new Blob(chunks,{type:recorder.mimeType}), `car-ar-${Date.now()}.${ext}`);
   };
   recorder.start(1000); recording = true; recStart = performance.now();
-  $('rec').classList.add('on'); $('timer').classList.add('on');
+  $('shutter').classList.add('rec'); $('rec').classList.add('on'); $('timer').classList.add('on');
   const tick = () => { if (!recording) return; const s = Math.floor((performance.now()-recStart)/1000);
     $('timer').textContent = `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`; setTimeout(tick, 500); };
   tick();
 }
 function stopRec(){ recording = false; recorder && recorder.state !== 'inactive' && recorder.stop();
-  $('rec').classList.remove('on'); $('timer').classList.remove('on'); }
+  $('shutter').classList.remove('rec'); $('rec').classList.remove('on'); $('timer').classList.remove('on'); }
 
 /* ---------- UI ---------- */
 document.querySelectorAll('.hit').forEach(el => el.addEventListener('beforexrselect', e => e.preventDefault()));
@@ -462,7 +735,7 @@ document.addEventListener('animationend', e => e.target.classList && e.target.cl
 $('flip').onclick = () => bgMat.uniforms.uFlip.value = 1 - bgMat.uniforms.uFlip.value;
 
 function toggle(p, btn){ const on = !$(p).classList.contains('on');
-  ['pGrade','pCar'].forEach(x => $(x).classList.remove('on')); ['bGrade','bCar'].forEach(x => $(x).classList.remove('act'));
+  ['pLook','pGrade','pPro','pCar'].forEach(x => $(x).classList.remove('on')); ['bLook','bGrade','bPro','bCar'].forEach(x => $(x).classList.remove('act'));
   if (on){ $(p).classList.add('on'); btn.classList.add('act'); } }
 $('bGrade').onclick = e => toggle('pGrade', e.currentTarget);
 $('bCar').onclick = e => toggle('pCar', e.currentTarget);
@@ -470,10 +743,209 @@ $('rot').oninput = e => { yaw.rotation.y = THREE.MathUtils.degToRad(+e.target.va
 $('scl').oninput = e => { stage.scale.setScalar(+e.target.value); e.target.nextElementSibling.textContent = (+e.target.value).toFixed(2) + '×'; };
 $('replace').onclick = () => { placed = false; anchor = null; stage.visible = false; $('pCar').classList.remove('on'); $('bCar').classList.remove('act');
   $('hint').classList.remove('off'); $('hint').textContent = 'Move your phone to find the ground'; };
-$('shutter').onclick = () => { if (hasCam) wantPhoto = true; };
-$('rec').onclick = () => { if (!hasCam) return; recording ? stopRec() : startRec(); };
-$('bExit').onclick = () => session && session.end();
-$('start').onclick = () => startAR().catch(e => { $('msg').textContent = 'Could not start AR: ' + e.message; });
+$('dist').oninput = e => { liteDist = +e.target.value; e.target.nextElementSibling.textContent = liteDist.toFixed(2) + '×'; };
+/* ---------- Camera app ---------- */
+let arOn = false, vidMode = false, timerSec = 0, facing = 'environment', resIdx = 1, track = null, caps = {}, camStream = null, busy = false, lastHist = 0, torch = false;
+const assists = {peak:false, zebra:false, hist:true};
+const RES = [[1280,720,'HD'],[1920,1080,'FHD'],[3840,2160,'4K']];
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const setCap = async c => { try { await track.applyConstraints({advanced:[c]}); return true; } catch(e){ return false; } };
+const toast = t => { const h = $('hint'); h.textContent = t; h.classList.remove('off'); clearTimeout(toast.t); toast.t = setTimeout(() => h.classList.add('off'), 3200); };
+
+async function startCam(){
+  stopCam();
+  const [rw, rh] = RES[resIdx];
+  try { camStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing}, width:{ideal:rw}, height:{ideal:rh}}, audio:false}); }
+  catch(e){ $('ui').classList.add('on'); toast('Camera access is needed. Allow it in the browser and reload.'); return; }
+  video = video || Object.assign(document.createElement('video'), {playsInline:true, muted:true});
+  video.srcObject = camStream; await video.play();
+  bgMat.uniforms.tCam.value = new THREE.VideoTexture(video); bgMat.uniforms.uFlip.value = 0;
+  track = camStream.getVideoTracks()[0]; caps = track.getCapabilities ? track.getCapabilities() : {};
+  buildPro(); torch = false; $('bFlash').classList.remove('act');
+  if (!window.DeviceOrientationEvent || !DeviceOrientationEvent.requestPermission) addEventListener('deviceorientation', onOrient);
+  rtScene.dispose(); rtScene.samples = arOn ? 4 : 0;
+  lite = true; hasCam = true;
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setSize(innerWidth, innerHeight);
+  Object.assign(renderer.domElement.style, {display:'block', position:'fixed', inset:'0', width:'100%', height:'100%', zIndex:'0'});
+  $('ui').classList.add('on'); $('ui').classList.remove('arx');
+  $('shutter').style.opacity = $('bGrade').style.opacity = ''; delete $('bar').dataset.nocam;
+}
+function stopCam(){ lite = false; camStream && camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+
+/* pro controls (only what the browser/camera exposes) */
+function buildPro(){
+  const box = $('proRows'); box.innerHTML = '';
+  const add = (key, label, fmt, extra) => {
+    const c = caps[key]; if (!c || c.max == null) return;
+    const row = document.createElement('div'); row.className = 'row';
+    row.innerHTML = `<label>${label}</label><input type="range" min="${c.min}" max="${c.max}" step="${c.step || (c.max - c.min)/100}"><output></output>`;
+    const inp = row.querySelector('input'), out = row.querySelector('output');
+    inp.value = track.getSettings()[key] ?? c.min; out.textContent = fmt(+inp.value);
+    inp.oninput = () => { out.textContent = fmt(+inp.value); setCap({...extra, [key]: +inp.value}); };
+    box.appendChild(row);
+  };
+  add('zoom','Zoom', v => v.toFixed(1)+'×', {});
+  add('exposureCompensation','EV', v => (v > 0 ? '+' : '') + v.toFixed(1), {});
+  add('iso','ISO', v => Math.round(v), {exposureMode:'manual'});
+  add('exposureTime','Shutter', v => '1/' + Math.round(1e4 / v), {exposureMode:'manual'});
+  add('focusDistance','Focus', v => v.toFixed(2)+' m', {focusMode:'manual'});
+  add('colorTemperature','WB', v => Math.round(v)+'K', {whiteBalanceMode:'manual'});
+  if (!box.children.length) box.innerHTML = '<p class="note">This browser doesn’t expose manual camera controls. Look and Adjust still give you EV, white balance and color. Manual ISO, shutter, focus and white balance work in Chrome on Android.</p>';
+  $('bFlash').style.opacity = caps.torch ? '' : .4;
+}
+$('aAuto').onclick = async () => { await setCap({exposureMode:'continuous', focusMode:'continuous', whiteBalanceMode:'continuous'}); buildPro(); };
+const assistBtn = (id, key) => $(id).onclick = e => {
+  assists[key] = !assists[key]; e.currentTarget.classList.toggle('sel', assists[key]);
+  gradeMat.uniforms.uPeak.value = +assists.peak; gradeMat.uniforms.uZebra.value = +assists.zebra; $('hist').style.opacity = assists.hist ? 1 : 0;
+};
+assistBtn('aPeak','peak'); assistBtn('aZebra','zebra'); assistBtn('aHist','hist');
+
+/* tap to focus + pinch to zoom */
+const pts = new Map(); let pd0 = 0, z0 = 1, pinched = false;
+const cv = renderer.domElement, dist2 = () => { const [a,b] = [...pts.values()]; return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY); };
+cv.addEventListener('pointerdown', e => { pts.set(e.pointerId, e); if (pts.size === 2){ pinched = true; pd0 = dist2(); z0 = (track && track.getSettings().zoom) || 1; } });
+cv.addEventListener('pointermove', e => { if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, e);
+  if (pts.size === 2 && caps.zoom) setCap({zoom: Math.min(caps.zoom.max, Math.max(caps.zoom.min, z0 * dist2() / pd0))}); });
+const endPtr = e => { pts.delete(e.pointerId); if (!pts.size){ const was = pinched; pinched = false; if (!was && lite && !arOn && e.type === 'pointerup') focusAt(e); } };
+cv.addEventListener('pointerup', endPtr); cv.addEventListener('pointercancel', endPtr);
+function focusAt(e){
+  const r = $('focusRing'); r.style.left = e.clientX + 'px'; r.style.top = e.clientY + 'px';
+  r.classList.remove('show'); void r.offsetWidth; r.classList.add('show');
+  const poi = {pointsOfInterest:[{x:e.clientX/innerWidth, y:e.clientY/innerHeight}]};
+  if (track) setCap((caps.focusMode || []).includes('single-shot') ? {focusMode:'single-shot', ...poi} : poi);
+}
+
+/* histogram + level */
+const hs = document.createElement('canvas'); hs.width = 64; hs.height = 36;
+const hctx = hs.getContext('2d', {willReadFrequently:true}), hc = $('hist'), hg = hc.getContext('2d');
+function drawHist(){
+  hctx.drawImage(video, 0, 0, 64, 36);
+  const d = hctx.getImageData(0, 0, 64, 36).data, bins = new Array(32).fill(0);
+  for (let i = 0; i < d.length; i += 4) bins[Math.min(31, ((.2126*d[i] + .7152*d[i+1] + .0722*d[i+2]) / 256 * 32) | 0)]++;
+  const mx = Math.max(...bins); hg.clearRect(0, 0, 84, 36); hg.fillStyle = '#f1f1ee';
+  bins.forEach((v, i) => { const h = v / mx * 28; hg.fillRect(4 + i*2.4, 33 - h, 1.8, h); });
+}
+function updateLevel(){
+  const lv = $('level'), up = orient && orient.beta > 55 && orient.beta < 125 && !((screen.orientation && screen.orientation.angle) || 0);
+  if (!up){ lv.style.opacity = 0; return; }
+  lv.style.opacity = 1; lv.style.transform = `translate(-50%,-50%) rotate(${-orient.gamma}deg)`; lv.classList.toggle('ok', Math.abs(orient.gamma) < 1.2);
+}
+
+/* LUT looks: built-in (generated 3D LUTs) + .cube import */
+const lum3 = c => .2126*c[0] + .7152*c[1] + .0722*c[2];
+const sat = (c, k) => { const l = lum3(c); return c.map(v => l + (v - l)*k); };
+const con = (c, k) => c.map(v => (v - .5)*k + .5);
+const split = (c, sh, hi) => { const l = lum3(c); return c.map((v, i) => v + sh[i]*(1-l)*(1-l) + hi[i]*l*l); };
+const LOOKS = {
+  Natural: null,
+  Portrait: c => split(sat(con(c,1.04),.94), [0,0,.012], [.03,.012,-.012]),
+  Vivid: c => con(sat(c,1.4), 1.08),
+  Cinematic: c => split(con(sat(c,.9),1.12), [-.03,.012,.045], [.055,.012,-.05]),
+  Film: c => split(sat(con(c,.9).map(v => v*.93 + .045), .85), [0,.01,.02], [.03,.012,-.01]),
+  Chrome: c => split(con(sat(c,1.12),1.16), [-.02,0,.03], [.025,.02,0]),
+  Faded: c => sat(c,.8).map(v => v*.82 + .1),
+  Noir: c => { const v = Math.min(1, Math.max(0, (lum3(c) - .04)*1.12)), k = v*v*(3 - 2*v); return [k,k,k]; }
+};
+function lutTexture(n, d){ const t = new THREE.DataTexture(d, n*n, n, THREE.RGBAFormat); t.minFilter = t.magFilter = THREE.LinearFilter; t.generateMipmaps = false; t.needsUpdate = true; return t; }
+const put = (d, n, r, g, b, o) => { const i = (g*n*n + b*n + r)*4; for (let k = 0; k < 3; k++) d[i+k] = Math.round(Math.min(1, Math.max(0, o[k]))*255); d[i+3] = 255; };
+function buildLut(fn, n = 17){ const d = new Uint8Array(n*n*n*4);
+  for (let b = 0; b < n; b++) for (let g = 0; g < n; g++) for (let r = 0; r < n; r++) put(d, n, r, g, b, fn([r/(n-1), g/(n-1), b/(n-1)]));
+  return {n, tex: lutTexture(n, d)}; }
+function parseCube(text){
+  let n = 0; const vals = [];
+  for (const line of text.split(/\r?\n/)){ const t = line.trim(); if (!t || t[0] === '#') continue;
+    if (t.startsWith('LUT_3D_SIZE')) n = +t.split(/\s+/)[1];
+    else if (/^[-\d.]/.test(t)){ const q = t.split(/\s+/).map(Number); if (q.length >= 3) vals.push(q); } }
+  if (!n || vals.length !== n*n*n) throw new Error('Unsupported .cube: needs a 3D LUT');
+  const d = new Uint8Array(n*n*n*4);
+  vals.forEach((q, i) => put(d, n, i % n, Math.floor(i/n) % n, Math.floor(i/(n*n)), q));
+  return {n, tex: lutTexture(n, d)};
+}
+gradeMat.uniforms.tLut.value = lutTexture(2, new Uint8Array(2*2*2*4));
+let lutOn = false;
+function addLook(name, make){
+  const b = document.createElement('button'); b.textContent = name;
+  b.onclick = () => {
+    $('looks').querySelectorAll('button').forEach(x => x.classList.toggle('sel', x === b));
+    const u = gradeMat.uniforms;
+    if (!make){ u.uLut.value = 0; lutOn = false; return; }
+    const r = make(); u.tLut.value = r.tex; u.uLutSize.value = r.n; u.uLut.value = +$('lutAmt').value; lutOn = true;
+  };
+  $('looks').appendChild(b); return b;
+}
+Object.entries(LOOKS).forEach(([n, f]) => addLook(n, f && (() => buildLut(f))));
+$('looks').firstChild.classList.add('sel');
+$('lutAmt').oninput = e => { e.target.nextElementSibling.textContent = (+e.target.value).toFixed(2); if (lutOn) gradeMat.uniforms.uLut.value = +e.target.value; };
+$('impLut').onclick = () => $('lutFile').click();
+$('lutFile').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try { const r = parseCube(await f.text()); addLook(f.name.replace(/\.cube$/i, ''), () => r).click(); } catch(err){ toast(err.message); }
+  e.target.value = '';
+};
+
+/* top bar + shutter */
+$('bFlash').onclick = async e => { if (!caps.torch) return; torch = !torch; if (await setCap({torch})) e.currentTarget.classList.toggle('act', torch); else torch = !torch; };
+$('bTimer').onclick = e => { timerSec = timerSec === 0 ? 3 : timerSec === 3 ? 10 : 0; e.currentTarget.querySelector('b').textContent = timerSec ? timerSec + 's' : 'Off'; e.currentTarget.classList.toggle('act', !!timerSec); };
+$('bGrid').onclick = e => { $('grid').classList.toggle('on'); e.currentTarget.classList.toggle('act'); };
+$('bRes').onclick = e => { resIdx = (resIdx + 1) % RES.length; e.currentTarget.textContent = RES[resIdx][2]; startCam(); };
+$('bFlip').onclick = () => { facing = facing === 'user' ? 'environment' : 'user'; startCam(); };
+$('bLook').onclick = e => toggle('pLook', e.currentTarget);
+$('bPro').onclick = e => toggle('pPro', e.currentTarget);
+document.querySelectorAll('#modes button').forEach(b => b.onclick = () => {
+  vidMode = b.dataset.m === 'video'; $('ui').classList.toggle('vid', vidMode);
+  document.querySelectorAll('#modes button').forEach(x => x.classList.toggle('sel', x === b));
+});
+async function countdown(){
+  for (let i = timerSec; i > 0; i--){ const c = $('count'); c.textContent = i; c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop'); await sleep(1000); }
+  $('count').textContent = '';
+}
+$('shutter').onclick = async () => {
+  if (!hasCam || busy) return;
+  if (vidMode && recording){ stopRec(); return; }
+  busy = true; await countdown(); busy = false;
+  if (vidMode) startRec();
+  else { wantPhoto = true; const f = $('shot'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
+};
+
+/* AR switch (optional) */
+async function enterAR(){
+  toast('Loading AR…');
+  try {
+    await loadModel();
+    if (startMode === 'xr'){ stopCam(); $('ui').classList.add('ar','arx'); rtScene.dispose(); rtScene.samples = 4; await startAR(); }
+    else if (startMode === 'w8'){
+      try { engineReady = engineReady || loadEngine(); await engineReady; } catch(e){ startMode = 'lite'; return enterAR(); }
+      stopCam(); $('ui').classList.add('ar','arx'); await startW8();
+    } else {
+      if (window.DeviceOrientationEvent && DeviceOrientationEvent.requestPermission && await DeviceOrientationEvent.requestPermission() !== 'granted') throw new Error('Motion access was denied');
+      addEventListener('deviceorientation', onOrient);
+      scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), .04).texture;
+      arOn = true; placed = false; stage.visible = false; $('ui').classList.add('ar'); $('rowDist').hidden = false;
+      rtScene.dispose(); rtScene.samples = 4;
+      toast('Aim at the ground and tap to park the car');
+    }
+  } catch(e){
+    $('arSw').checked = false; $('ui').classList.remove('ar','arx'); arOn = false; toast('AR unavailable: ' + e.message);
+    if (!lite) startCam();
+  }
+}
+function leaveAR(){
+  if (session) return session.end();                    // onEnd restarts the camera
+  if (w8) return location.reload();
+  arOn = false; placed = false; stage.visible = false; scene.environment = null;
+  $('ui').classList.remove('ar'); $('rowDist').hidden = true; $('pCar').classList.remove('on'); $('bCar').classList.remove('act');
+  rtScene.dispose(); rtScene.samples = 0; $('hint').classList.add('off');
+}
+$('arSw').onchange = e => e.target.checked ? enterAR() : leaveAR();
+
+let startMode = 'xr';
+$('start').onclick = () => {
+  const m = startMode;
+  (m === 'xr' ? startAR() : m === 'w8' ? startW8() : startLite()).catch(e => {
+    $('msg').textContent = 'Could not start AR: ' + e.message;
+    if (m === 'w8'){ startMode = 'lite'; $('start').textContent = 'Start basic camera mode'; }   // fall back
+  });
+};
 
 async function setStart(){
   const btn = $('start');
@@ -481,22 +953,27 @@ async function setStart(){
   try { supported = !!navigator.xr && await navigator.xr.isSessionSupported('immersive-ar'); }
   catch (e) {
     // The page is inside an iframe/preview that does not allow WebXR (permissions policy).
-    xrBlocked = true;
+    xrBlocked = true; startMode = 'lite';
     btn.disabled = false; btn.textContent = 'Open in a new tab';
     $('msg').textContent = 'AR is blocked inside previews and embedded frames. Open the deployed page (GitHub Pages) directly in Chrome.';
     btn.onclick = () => window.open(location.href, '_blank', 'noopener');
     return;
   }
   if (!supported){
-    $('landing').style.display = 'none'; $('fallback').style.display = 'flex';   // iOS Quick Look / Scene Viewer / desktop viewer
-    import('https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js').catch(console.error);
-    return;
+    // No WebXR on this phone: camera + gyro mode, plus the phone's own AR viewer as an alternative
+    // No WebXR: use the 8th Wall SLAM engine (any modern phone). If it can't load, fall back to basic camera mode.
+    startMode = 'w8';
+    $('alt').hidden = false;
+    $('alt').onclick = () => {
+      $('landing').style.display = 'none'; $('fallback').style.display = 'flex';
+      import('https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js').catch(console.error);
+    };
   }
   xrOK = true;
   if (modelReady){ btn.disabled = false; btn.textContent = 'Start AR'; }
 }
-setStart();
-addEventListener('resize', () => renderer.setSize(innerWidth, innerHeight));
+setStart(); startCam(); setTimeout(loadModel, 1500);
+addEventListener('resize', () => { if (w8) sizeXrCanvas(); else if (!lite) renderer.setSize(innerWidth, innerHeight); });
 </script>
 </body>
 </html>
