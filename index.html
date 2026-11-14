@@ -743,6 +743,7 @@ function stopLite(){
   $('rowDist').hidden = true; $('ui').classList.remove('on'); $('landing').style.display = '';
 }
 function groundPoint(nx, ny, cam = camera){           // screen NDC -> point on the ground plane (y = 0)
+  if (!cam) return null;
   if (cam !== camera) cam.updateMatrixWorld();
   cam.projectionMatrixInverse.copy(cam.projectionMatrix).invert();
   const o = new THREE.Vector3().setFromMatrixPosition(cam.matrixWorld);
@@ -753,7 +754,7 @@ function groundPoint(nx, ny, cam = camera){           // screen NDC -> point on 
   return isFinite(r.x + r.y + r.z) ? r : null;
 }
 renderer.domElement.addEventListener('pointerup', e => {
-  if (!((lite && arOn) || w8) || placed) return;
+  if (!((lite && arOn) || (w8 && cam8)) || placed) return;
   const pt = groundPoint(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight * 2 - 1), w8 ? cam8 : camera);
   if (!pt){ $('hint').textContent = 'Aim lower, at the ground'; return; }
   litePos.copy(pt); liteDist = 1; $('dist').value = 1; ppCar.refresh();
@@ -866,6 +867,7 @@ function sizeXrCanvas(){
 }
 async function startW8(){
   await engineReady;
+  video && (video.srcObject = null); await sleep(350);          // make sure our own camera stream is fully released
   xrCanvas = document.createElement('canvas');
   Object.assign(xrCanvas.style, {position:'fixed', left:0, top:0, width:'100%', height:'100%', opacity:0, pointerEvents:'none', zIndex:-1});
   document.body.appendChild(xrCanvas); sizeXrCanvas();
@@ -903,7 +905,7 @@ async function startW8(){
         renderer.setRenderTarget(null); renderer.render(quadScene, quadCam);
         if (wantPhoto){ wantPhoto = false; renderer.domElement.toBlob(b => saveBlob(b, `car-ar-${Date.now()}.jpg`), 'image/jpeg', .95); }
       },
-      onException: e => console.error(e)}
+      onException: e => { console.error(e); w8Fail(e); }}
   ]);
   w8 = true; hasCam = true; placed = false; stage.visible = false;
   $('shutter').style.opacity = $('rec').style.opacity = $('bGrade').style.opacity = ''; delete $('bar').dataset.nocam;
@@ -911,7 +913,16 @@ async function startW8(){
   Object.assign(renderer.domElement.style, {display:'block', position:'fixed', inset:'0', width:'100%', height:'100%', zIndex:'0'});
   $('landing').style.display = 'none'; $('ui').classList.add('on');
   $('hint').classList.remove('off'); $('hint').textContent = 'Move the phone slowly forward and back, then tap the ground';
-  XR8.run({canvas: xrCanvas});
+  XR8.run({canvas: xrCanvas, allowedDevices: XR8.XrConfig.device().ANY});
+  setTimeout(() => { if (w8 && !cam8) w8Fail(new Error('Tracking engine did not start')); }, 12000);
+}
+function w8Fail(e){                                  // engine could not start: go back to the camera and use basic AR
+  if (!w8) return; w8 = false; cam8 = null;
+  try { XR8.stop(); XR8.clearCameraPipelineModules(); } catch(_){}
+  xrCanvas && xrCanvas.remove(); startMode = 'lite';
+  $('ui').classList.remove('ar', 'arx');
+  toast('Tracking engine couldn’t start here. Using basic AR.');
+  startCam().then(() => enterAR());
 }
 
 /* ---------- capture ---------- */
@@ -1028,11 +1039,14 @@ $('replace').onclick = () => { placed = false; anchor = null; stage.visible = fa
   $('hint').classList.remove('off'); $('hint').textContent = 'Move your phone to find the ground'; };
 $('dist').oninput = e => { liteDist = +e.target.value; e.target.nextElementSibling.textContent = liteDist.toFixed(2) + '×'; };
 /* ---------- Error panel (stays on screen until dismissed) ---------- */
-function showErr(m){ $('err').querySelector('pre').textContent = `[mode=${typeof startMode !== 'undefined' ? startMode : '?'} arOn=${typeof arOn !== 'undefined' && arOn} w8=${w8}]\n` + m; $('err').classList.add('on'); }
+const errLines = [];
+function showErr(m){ errLines.push(String(m).slice(0, 400)); if (errLines.length > 6) errLines.shift();
+  $('err').querySelector('pre').textContent = `[mode=${typeof startMode !== 'undefined' ? startMode : '?'} arOn=${typeof arOn !== 'undefined' && arOn} w8=${w8}]\n` + errLines.join('\n'); $('err').classList.add('on'); }
 addEventListener('error', e => showErr(e.message + (e.filename ? '\n' + e.filename.split('/').pop() + ':' + e.lineno : '')));
 addEventListener('unhandledrejection', e => showErr(String((e.reason && (e.reason.stack || e.reason.message)) || e.reason)));
 { const ce = console.error.bind(console); console.error = (...a) => { ce(...a); try { showErr(a.map(x => (x && x.message) || (typeof x === 'object' ? JSON.stringify(x) : String(x))).join(' ')); } catch(_){} }; }
-$('errX').onclick = () => $('err').classList.remove('on');
+{ const cw = console.warn.bind(console); console.warn = (...a) => { cw(...a); const t = a.map(String).join(' '); if (/^\[XR/.test(t)) showErr(t); }; }
+$('errX').onclick = () => { errLines.length = 0; $('err').classList.remove('on'); };
 $('errCopy').onclick = () => navigator.clipboard && navigator.clipboard.writeText($('err').querySelector('pre').textContent);
 
 document.querySelectorAll('.panel').forEach(p => {   // grab handle: drag down to close
