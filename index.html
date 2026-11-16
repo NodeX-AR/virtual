@@ -45,7 +45,7 @@ canvas#guides.on{opacity:1}
 
 #hist{position:absolute;left:12px;top:calc(60px + env(safe-area-inset-top));width:96px;height:42px;
   border-radius:18px;background:var(--glass);border:1px solid var(--rim);box-shadow:var(--lift);
-  -webkit-backdrop-filter:blur(10px) saturate(1.6);backdrop-filter:blur(10px) saturate(1.6);display:none}
+  -webkit-backdrop-filter:blur(10px) saturate(1.6);backdrop-filter:blur(10px) saturate(1.6);display:none;z-index:5}
 #hist.on{display:block}
 
 #hint{position:absolute;top:calc(110px + env(safe-area-inset-top));left:50%;transform:translate(-50%,-10px);
@@ -62,11 +62,28 @@ canvas#guides.on{opacity:1}
 #timer.on{opacity:1;transform:translate(-50%,0)}
 
 #focusRing{position:absolute;width:72px;height:72px;margin:-36px 0 0 -36px;border:2px solid #fff;border-radius:18px;
-  opacity:0;pointer-events:none;box-shadow:0 0 16px rgba(255,255,255,.5),0 0 0 1px rgba(0,0,0,.25) inset}
+  opacity:0;pointer-events:none;box-shadow:0 0 16px rgba(255,255,255,.5),0 0 0 1px rgba(0,0,0,.25) inset;z-index:3}
 #focusRing.show{animation:focus .9s both}
 @keyframes focus{
   0%{opacity:0;transform:scale(1.5);animation-timing-function:cubic-bezier(.2,.9,.3,1)}
   25%{opacity:1;transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:scale(.95)}}
+
+#faceBox{position:absolute;border:2px solid #fff;border-radius:18px;pointer-events:none;
+  opacity:0;transition:opacity .25s var(--out),left .1s linear,top .1s linear,width .1s linear,height .1s linear;
+  box-shadow:0 0 16px rgba(255,255,255,.4);z-index:3;display:none}
+#faceBox.on{opacity:1;display:block}
+#faceBox.lock{border-color:var(--ice);box-shadow:0 0 18px rgba(88,174,255,.6)}
+
+#level{position:absolute;left:50%;top:50%;width:240px;height:2px;
+  transform:translate(-50%,-50%) rotate(0deg);
+  background:rgba(255,255,255,.6);opacity:0;transition:opacity .2s,background .2s,box-shadow .2s;
+  pointer-events:none;z-index:3;border-radius:1px;margin-left:-120px;margin-top:-1px}
+#level.on{opacity:1}
+#level::before,#level::after{content:"";position:absolute;top:-5px;width:2px;height:12px;
+  background:inherit;border-radius:1px}
+#level::before{left:0}
+#level::after{right:0}
+#level.ok{background:#3ddc84;box-shadow:0 0 12px rgba(61,220,132,.7)}
 
 #count{position:absolute;inset:0;display:grid;place-items:center;font-size:120px;font-weight:600;
   pointer-events:none;opacity:0;text-shadow:0 2px 14px #0009;z-index:7}
@@ -180,6 +197,21 @@ input[type=range]:active::-webkit-slider-thumb{transform:scale(1.2)}
 .meter{display:flex;gap:2px;height:20px;align-items:flex-end;margin-top:6px}
 .meter i{flex:1;background:linear-gradient(to top,#3ddc84,#ffd60a 70%,#ff453a);height:2px;border-radius:2px;transition:height .05s linear;opacity:.85}
 
+.feats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.feat{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:14px 16px;
+  border-radius:26px;text-align:left;color:#fff;background:var(--glass);border:1px solid var(--rim);
+  box-shadow:var(--lift);text-shadow:0 1px 3px rgba(0,0,0,.5);
+  transition:transform .14s var(--inout),background .4s var(--out),color .3s var(--out)}
+.feat svg{width:28px;height:28px;margin-bottom:6px;fill:none;stroke:currentColor;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+.feat b{font-size:14px;font-weight:600}
+.feat small{font-size:12px;opacity:.75;line-height:1.3}
+.feat.on{background:linear-gradient(180deg,#fff,#ecebe4 55%,#d6d3ca);color:#16181b;border-color:#fff;
+  text-shadow:none;box-shadow:0 10px 24px rgba(0,0,0,.35),0 1px 0 #fff inset,0 0 22px rgba(255,255,255,.3)}
+.feat.on small{opacity:.7}
+.feat.on svg{filter:none}
+.feat:disabled{opacity:.4;cursor:not-allowed}
+
 #viewer{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
   padding:calc(20px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom));
   background:rgba(6,7,9,.7);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);
@@ -195,11 +227,11 @@ input[type=range]:active::-webkit-slider-thumb{transform:scale(1.2)}
 
 #err{position:absolute;top:calc(60px + env(safe-area-inset-top));left:12px;right:12px;
   background:var(--glass),rgba(8,10,14,.3);border:1px solid rgba(255,69,58,.7);border-radius:24px;
-  padding:12px;display:none;z-index:9;max-height:40vh;overflow:auto;box-shadow:var(--lift)}
+  padding:12px;display:none;z-index:9;max-height:40vh;overflow:auto;box-shadow:var(--lift);
+  pointer-events:auto;user-select:text;-webkit-user-select:text}
 #err.on{display:block}
-#err pre{margin:0 0 8px;font:12px/1.4 ui-monospace,monospace;white-space:pre-wrap;word-break:break-word;user-select:text}
+#err pre{margin:0;font:12px/1.4 ui-monospace,monospace;white-space:pre-wrap;word-break:break-word}
 
-/* parameter panel — ruler UI */
 .pchips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 12px;
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);
   mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)}
@@ -218,7 +250,6 @@ input[type=range]:active::-webkit-slider-thumb{transform:scale(1.2)}
   text-shadow:0 2px 10px rgba(0,0,0,.45)}
 .pread small{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.7)}
 
-.pp.empty{display:none}
 .rwrap{position:relative}
 .ruler{overflow-x:auto;overflow-y:hidden;scrollbar-width:none;height:56px;touch-action:pan-x;
   -webkit-overflow-scrolling:touch;
@@ -234,6 +265,8 @@ input[type=range]:active::-webkit-slider-thumb{transform:scale(1.2)}
 .needle{position:absolute;left:50%;top:8px;width:3px;height:44px;margin-left:-1.5px;border-radius:2px;
   background:#fff;box-shadow:0 0 14px rgba(255,255,255,.9),0 0 0 1px rgba(0,0,0,.2);pointer-events:none}
 
+.pnote{color:rgba(255,255,255,.55);font-size:12px;margin:6px 2px 0;text-shadow:0 1px 3px rgba(0,0,0,.5);line-height:1.4}
+
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 </style>
 </head>
@@ -242,6 +275,8 @@ input[type=range]:active::-webkit-slider-thumb{transform:scale(1.2)}
 <canvas id="gl"></canvas>
 <canvas id="guides"></canvas>
 <canvas id="hist" width="192" height="84"></canvas>
+<div id="faceBox"></div>
+<div id="level"></div>
 <div id="count"></div>
 <div id="shot"></div>
 <div id="focusRing"></div>
@@ -269,6 +304,7 @@ input[type=range]:active::-webkit-slider-thumb{transform:scale(1.2)}
   <div class="panel hit" id="pLook"></div>
   <div class="panel hit" id="pAdjust"></div>
   <div class="panel hit" id="pPro"></div>
+  <div class="panel hit" id="pSmart"></div>
   <div class="panel hit" id="pAudio">
     <i class="grab"></i>
     <div class="row"><label>Mic</label><select id="micSel"></select></div>
@@ -277,7 +313,6 @@ input[type=range]:active::-webkit-slider-thumb{transform:scale(1.2)}
     <div class="presets">
       <button class="btn sel" id="aWnd">Wind filter</button>
       <button class="btn sel" id="aLim">Limiter</button>
-      <button class="btn" id="aZebra">Zebra</button>
     </div>
     <div class="meter" id="audioMeter"></div>
   </div>
@@ -286,6 +321,7 @@ input[type=range]:active::-webkit-slider-thumb{transform:scale(1.2)}
     <button class="chip hit" id="bLook"><svg viewBox="0 0 24 24"><circle cx="9" cy="12" r="5"/><circle cx="15" cy="12" r="5"/></svg>Look</button>
     <button class="chip hit" id="bAdjust"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>Adjust</button>
     <button class="chip hit" id="bPro"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v3M12 17v3M4 12h3M17 12h3"/></svg>Pro</button>
+    <button class="chip hit" id="bSmart"><svg viewBox="0 0 24 24"><rect x="4.5" y="4.5" width="15" height="15" rx="5"/><path d="M9.5 10v1.2M14.5 10v1.2M9 14.6c1.7 1.4 4.3 1.4 6 0"/></svg>Smart</button>
     <button class="chip hit" id="bAudio"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Audio</button>
   </div>
 
@@ -316,7 +352,8 @@ input[type=range]:active::-webkit-slider-thumb{transform:scale(1.2)}
 
 <script type="module">
 /* ============================================================
-   CAM PRO — camera app
+   CAM PRO — with working Face Lock, Face Focus, Stabilizer,
+   AE/AF Lock, Level, Peaking, and full Pro / Smart panels.
    ============================================================ */
 const $ = s => document.querySelector(s);
 const video = $('#pv');
@@ -342,13 +379,25 @@ const state = {
   grid: false,
   falseColor: false,
   zebra: false,
+  peaking: false,
   hist: false,
   zoom: 1,
+  digitalZoom: 1,
   gain: 1,
   wind: true,
   limiter: true,
   burst: 12,
-  micId: ''
+  micId: '',
+  faceLock: false,
+  faceFocus: false,
+  stabilizer: false,
+  lockAEAF: false,
+  level: false,
+  faceCenter: null,
+  faceBox: null,
+  stabOffset: {x:0, y:0},
+  stabTarget: {x:0, y:0},
+  stabPan: {x:0, y:0}
 };
 const G = {exposure:0, contrast:1, saturation:1, temp:0, tint:0, highlights:0, shadows:0, vignette:0};
 const DEFAULT_G = {...G};
@@ -366,14 +415,16 @@ let recorder = null, recording = false, recStart = 0, recStream = null;
 let busy = false;
 let lastCap = null;
 let lastHist = 0;
+let lastMotion = 0;
 
-/* ---------- WebGL grading ---------- */
+/* ---------- WebGL grading + crop + peaking ---------- */
 const FRAG = `precision highp float;
 varying vec2 v;
 uniform sampler2D uTex;
 uniform vec4 uG1;
 uniform vec4 uG2;
-uniform float uFalse, uZebra;
+uniform vec4 uCrop;
+uniform float uFalse, uZebra, uPeak;
 uniform vec2 uTexel;
 
 vec3 tanh3(vec3 x){
@@ -387,7 +438,8 @@ vec3 softc(vec3 x){
 }
 
 void main(){
-  vec3 c = texture2D(uTex, v).rgb;
+  vec2 uv = uCrop.xy + v * uCrop.zw;
+  vec3 c = texture2D(uTex, uv).rgb;
   c *= exp2(uG1.x);
   c *= vec3(1.0 + uG1.w * .18, 1.0 - uG2.x * .12, 1.0 - uG1.w * .18);
   c = softc(max(c, 0.0));
@@ -397,6 +449,15 @@ void main(){
   l = dot(c, vec3(.2126, .7152, .0722));
   c = mix(vec3(l), c, uG1.z);
   c *= 1.0 - uG2.w * smoothstep(.35, 1.0, length(v - .5) * 1.5);
+
+  if (uPeak > .5) {
+    float gx = dot(texture2D(uTex, uv + vec2(uTexel.x * 2.0, 0.0)).rgb
+                 - texture2D(uTex, uv - vec2(uTexel.x * 2.0, 0.0)).rgb, vec3(.333));
+    float gy = dot(texture2D(uTex, uv + vec2(0.0, uTexel.y * 2.0)).rgb
+                 - texture2D(uTex, uv - vec2(0.0, uTexel.y * 2.0)).rgb, vec3(.333));
+    float edge = length(vec2(gx, gy));
+    if (edge > 0.12) c = mix(c, vec3(1.0, 0.25, 0.25), 0.75);
+  }
 
   if (uFalse > .5) {
     float fl = dot(c, vec3(.2126, .7152, .0722));
@@ -453,10 +514,37 @@ function initGL() {
     tex:    gl.getUniformLocation(glProg, 'uTex'),
     g1:     gl.getUniformLocation(glProg, 'uG1'),
     g2:     gl.getUniformLocation(glProg, 'uG2'),
+    crop:   gl.getUniformLocation(glProg, 'uCrop'),
     falseC: gl.getUniformLocation(glProg, 'uFalse'),
     zebra:  gl.getUniformLocation(glProg, 'uZebra'),
+    peak:   gl.getUniformLocation(glProg, 'uPeak'),
     texel:  gl.getUniformLocation(glProg, 'uTexel')
   };
+}
+
+function getViewportCrop() {
+  let cx = 0.5, cy = 0.5;
+  let size = 1 / Math.max(1, state.digitalZoom);
+
+  if (state.stabilizer) {
+    cx += state.stabOffset.x * size;
+    cy += state.stabOffset.y * size;
+  }
+
+  if (state.faceLock && state.faceCenter) {
+    const strength = 0.55;
+    const dx = (state.faceCenter.x - 0.5) * strength * size;
+    const dy = (state.faceCenter.y - 0.5) * strength * size;
+    cx += dx;
+    cy += dy;
+    size = Math.min(size, 0.72);
+  }
+
+  const half = size / 2;
+  cx = Math.max(half, Math.min(1 - half, cx));
+  cy = Math.max(half, Math.min(1 - half, cy));
+
+  return {x: cx - half, y: cy - half, w: size, h: size};
 }
 
 function drawGraded(src) {
@@ -473,14 +561,18 @@ function drawGraded(src) {
   gl.uniform1i(glUni.tex, 0);
   gl.uniform4f(glUni.g1, G.exposure, G.contrast, G.saturation, G.temp);
   gl.uniform4f(glUni.g2, G.tint, G.highlights, G.shadows, G.vignette);
+  const c = getViewportCrop();
+  gl.uniform4f(glUni.crop, c.x, c.y, c.w, c.h);
   gl.uniform1f(glUni.falseC, state.falseColor ? 1 : 0);
   gl.uniform1f(glUni.zebra,  state.zebra ? 1 : 0);
+  gl.uniform1f(glUni.peak,   state.peaking ? 1 : 0);
   gl.uniform2f(glUni.texel, 1 / w, 1 / h);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 }
 
 function isIdentity() {
-  return !state.falseColor && !state.zebra &&
+  return !state.falseColor && !state.zebra && !state.peaking &&
+    state.digitalZoom === 1 && !state.faceLock && !state.stabilizer &&
     G.exposure === 0 && G.contrast === 1 && G.saturation === 1 &&
     G.temp === 0 && G.tint === 0 && G.highlights === 0 && G.shadows === 0 && G.vignette === 0;
 }
@@ -584,6 +676,13 @@ async function startCamera() {
     resizeCanvas();
     await setupAudio();
     await populateMics();
+    if (state.zoom > 1) await applyZoom(state.zoom);
+    state.faceCenter = null;
+    state.faceBox = null;
+    state.stabOffset = {x:0, y:0};
+    state.stabTarget = {x:0, y:0};
+    state.stabPan = {x:0, y:0};
+    state.lockAEAF = false;
     showHint('Tap the shutter, or pick a mode');
     setTimeout(() => hint.classList.remove('on'), 2200);
   } catch (e) {
@@ -654,18 +753,39 @@ function drawHistogram() {
   hctx.globalCompositeOperation = 'source-over';
 }
 
-/* ---------- zoom ---------- */
-async function setZoom(z) {
+/* ---------- zoom (hardware first, digital fallback) ---------- */
+async function applyZoom(z) {
+  z = Math.max(1, z);
   state.zoom = z;
-  document.querySelectorAll('.zoom').forEach(b => b.classList.toggle('on', +b.dataset.z === z));
-  if (!videoTrack) return;
-  try {
-    const caps = videoTrack.getCapabilities?.();
-    if (caps && caps.zoom) await videoTrack.applyConstraints({advanced: [{zoom: z}]});
-  } catch (e) {}
+  let hw = 1;
+  if (videoTrack) {
+    try {
+      const caps = videoTrack.getCapabilities?.() || {};
+      if (caps.zoom && caps.zoom.max != null && caps.zoom.max > 1) {
+        const v = Math.min(caps.zoom.max, z);
+        let ok = false;
+        try { await videoTrack.applyConstraints({advanced: [{zoom: v}]}); ok = true; }
+        catch (e1) {
+          try { await videoTrack.applyConstraints({zoom: v}); ok = true; } catch (e2) {}
+        }
+        if (ok) {
+          const st = videoTrack.getSettings?.() || {};
+          hw = st.zoom || v;
+        }
+      }
+    } catch (e) {}
+  }
+  state.digitalZoom = Math.max(1, z / hw);
+  updateZoomUI();
 }
 
-/* ---------- flash / torch ---------- */
+function updateZoomUI() {
+  document.querySelectorAll('.zoom').forEach(b => {
+    b.classList.toggle('on', Math.abs(+b.dataset.z - state.zoom) < 0.15);
+  });
+}
+
+/* ---------- torch / flash ---------- */
 async function toggleTorch() {
   if (!videoTrack) return;
   try {
@@ -675,6 +795,202 @@ async function toggleTorch() {
     await videoTrack.applyConstraints({advanced: [{torch: state.torch}]});
     $('#bFlash').classList.toggle('act', state.torch);
   } catch (e) { showHint('Torch unavailable'); }
+}
+
+/* ---------- face detection ---------- */
+let faceDetector = null;
+try {
+  if ('FaceDetector' in window) {
+    faceDetector = new window.FaceDetector({fastMode: true, maxDetectedFaces: 1});
+  }
+} catch (e) { faceDetector = null; }
+const faceAvailable = !!faceDetector;
+let faceLoopActive = false;
+
+async function faceLoop() {
+  if (!faceLoopActive) return;
+  if (state.faceLock && faceDetector && video.readyState >= 2 && video.videoWidth) {
+    try {
+      const faces = await faceDetector.detect(video);
+      if (faces.length) {
+        const bb = faces[0].boundingBox;
+        state.faceCenter = {
+          x: (bb.x + bb.width/2) / video.videoWidth,
+          y: (bb.y + bb.height/2) / video.videoHeight
+        };
+        state.faceBox = {
+          x: bb.x / video.videoWidth,
+          y: bb.y / video.videoHeight,
+          w: bb.width / video.videoWidth,
+          h: bb.height / video.videoHeight
+        };
+      } else {
+        state.faceCenter = null;
+        state.faceBox = null;
+      }
+    } catch (e) {}
+  } else if (!state.faceLock) {
+    state.faceCenter = null;
+    state.faceBox = null;
+  }
+  setTimeout(faceLoop, 100);
+}
+
+function updateFaceBox() {
+  const fb = $('#faceBox');
+  if (!state.faceBox || !state.faceLock) {
+    fb.classList.remove('on');
+    return;
+  }
+  const b = state.faceBox;
+  const c = getViewportCrop();
+  const x = (b.x - c.x) / c.w;
+  const y = (b.y - c.y) / c.h;
+  const w = b.w / c.w;
+  const h = b.h / c.h;
+  if (x + w < -0.1 || x > 1.1 || y + h < -0.1 || y > 1.1) {
+    fb.classList.remove('on');
+    return;
+  }
+  fb.style.left = (x * 100) + '%';
+  fb.style.top = (y * 100) + '%';
+  fb.style.width = (w * 100) + '%';
+  fb.style.height = (h * 100) + '%';
+  fb.classList.add('on');
+}
+
+/* ---------- stabilizer: motion estimation ---------- */
+const motionCv = document.createElement('canvas');
+motionCv.width = 32; motionCv.height = 18;
+const motionCtx = motionCv.getContext('2d', {willReadFrequently: true});
+let prevMotionData = null;
+
+function estimateMotion() {
+  if (!video.videoWidth || video.readyState < 2) return null;
+  motionCtx.drawImage(video, 0, 0, 32, 18);
+  const curr = motionCtx.getImageData(0, 0, 32, 18).data;
+  if (!prevMotionData) {
+    prevMotionData = new Uint8ClampedArray(curr);
+    return null;
+  }
+  let bestDx = 0, bestDy = 0, bestErr = Infinity;
+  const R = 3;
+  for (let dy = -R; dy <= R; dy++) {
+    for (let dx = -R; dx <= R; dx++) {
+      let err = 0;
+      for (let y = R; y < 18 - R; y++) {
+        for (let x = R; x < 32 - R; x++) {
+          const i1 = ((y + dy) * 32 + (x + dx)) * 4;
+          const i2 = (y * 32 + x) * 4;
+          err += Math.abs(curr[i1] - prevMotionData[i2]);
+        }
+      }
+      if (err < bestErr) { bestErr = err; bestDx = dx; bestDy = dy; }
+    }
+  }
+  prevMotionData = new Uint8ClampedArray(curr);
+  return {dx: bestDx / 32, dy: bestDy / 18};
+}
+
+function updateStabilizer() {
+  if (!state.stabilizer) return;
+  const now = performance.now();
+  if (now - lastMotion < 30) return;
+  lastMotion = now;
+  const m = estimateMotion();
+  if (!m) return;
+
+  // Slow-moving pan estimate (low-pass filter)
+  state.stabPan.x = state.stabPan.x * 0.97 + m.dx * 0.03;
+  state.stabPan.y = state.stabPan.y * 0.97 + m.dy * 0.03;
+
+  // Jitter = motion minus pan
+  const jx = m.dx - state.stabPan.x;
+  const jy = m.dy - state.stabPan.y;
+
+  state.stabTarget.x += jx;
+  state.stabTarget.y += jy;
+  state.stabTarget.x = Math.max(-0.05, Math.min(0.05, state.stabTarget.x));
+  state.stabTarget.y = Math.max(-0.05, Math.min(0.05, state.stabTarget.y));
+  state.stabTarget.x *= 0.98;
+  state.stabTarget.y *= 0.98;
+
+  state.stabOffset.x += (state.stabTarget.x - state.stabOffset.x) * 0.15;
+  state.stabOffset.y += (state.stabTarget.y - state.stabOffset.y) * 0.15;
+}
+
+/* ---------- level indicator ---------- */
+let orientData = null;
+function onOrient(e) {
+  orientData = e;
+  updateLevelDisplay();
+}
+function startLevelTracking() {
+  if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
+    DeviceOrientationEvent.requestPermission().then(r => {
+      if (r === 'granted') window.addEventListener('deviceorientation', onOrient);
+      else showHint('Motion access denied');
+    }).catch(()=>{});
+  } else {
+    window.addEventListener('deviceorientation', onOrient);
+  }
+}
+function stopLevelTracking() {
+  window.removeEventListener('deviceorientation', onOrient);
+  orientData = null;
+  $('#level').classList.remove('on', 'ok');
+}
+function updateLevelDisplay() {
+  const el = $('#level');
+  if (!state.level) { el.classList.remove('on'); return; }
+  el.classList.add('on');
+  if (!orientData) return;
+  const angle = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
+  let roll = 0;
+  if (angle === 0) roll = orientData.gamma || 0;
+  else if (angle === 90) roll = -(orientData.beta || 0);
+  else if (angle === 180) roll = -(orientData.gamma || 0);
+  else if (angle === 270) roll = (orientData.beta || 0);
+  // Normalize to -90..90
+  while (roll > 90) roll -= 180;
+  while (roll < -90) roll += 180;
+  el.style.transform = `translate(-50%,-50%) rotate(${roll}deg)`;
+  el.classList.toggle('ok', Math.abs(roll) < 2);
+}
+
+/* ---------- AE/AF lock ---------- */
+async function setAEAF(locked) {
+  if (!videoTrack) return false;
+  try {
+    if (locked) {
+      const st = videoTrack.getSettings?.() || {};
+      const adv = {};
+      if (st.exposureTime != null) { adv.exposureMode = 'manual'; adv.exposureTime = st.exposureTime; }
+      if (st.iso != null) adv.iso = st.iso;
+      if (st.focusDistance != null) { adv.focusMode = 'manual'; adv.focusDistance = st.focusDistance; }
+      if (!Object.keys(adv).length) throw new Error('no settable params');
+      await videoTrack.applyConstraints({advanced: [adv]});
+    } else {
+      await videoTrack.applyConstraints({advanced: [
+        {exposureMode: 'continuous', focusMode: 'continuous'}
+      ]});
+    }
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+/* ---------- face focus ---------- */
+async function applyFaceFocus() {
+  if (!videoTrack || !state.faceCenter) return;
+  try {
+    const st = videoTrack.getSettings?.() || {};
+    await videoTrack.applyConstraints({advanced: [{
+      pointsOfInterest: [{x: state.faceCenter.x, y: state.faceCenter.y}],
+      focusMode: 'single-shot'
+    }]});
+  } catch (e) {}
 }
 
 /* ---------- capture: photo ---------- */
@@ -779,7 +1095,7 @@ function tickRecording() {
   setTimeout(tickRecording, 250);
 }
 
-/* ---------- capture: burst merge (Ultra 4K / Night) ---------- */
+/* ---------- burst merge worker ---------- */
 const MERGE_WORKER_SRC = `
 function grayDown(data, w, h, f) {
   const dw = (w/f)|0, dh = (h/f)|0;
@@ -1025,7 +1341,7 @@ function saveBlob(blob, name, kind) {
   showHint(kind === 'image' ? 'Photo saved' : 'Video saved');
 }
 
-/* ---------- errors / hints ---------- */
+/* ---------- hints / errors ---------- */
 let hintTimer = 0;
 function showHint(text, ms = 2200) {
   hint.textContent = text;
@@ -1130,7 +1446,7 @@ const ppAdjust = makePanel('pAdjust', () =>
   }))
 );
 
-/* Pro panel */
+/* ---------- Pro panel ---------- */
 let proList = [];
 const ppPro = makePanel('pPro', () => proList);
 
@@ -1139,11 +1455,19 @@ async function buildPro() {
   if (!videoTrack) { ppPro.rebuild(); return; }
   const caps = videoTrack.getCapabilities?.() || {};
   const st = videoTrack.getSettings?.() || {};
+
+  proList.push({
+    id: 'zoom', label: 'Zoom', min: 1, max: 10, step: 0.1, def: 1,
+    get: () => state.zoom,
+    set: v => applyZoom(v),
+    fmt: v => v.toFixed(1) + '×'
+  });
+
   const add = (key, label, fmt, extra) => {
     const c = caps[key];
     if (!c || c.max == null) return;
     let val = st[key] ?? c.min;
-    const def = key === 'zoom' ? c.min : val;
+    const def = val;
     proList.push({id: key, label, min: c.min, max: c.max,
       step: c.step || (c.max - c.min) / 100, def,
       get: () => val, set: v => {
@@ -1151,23 +1475,138 @@ async function buildPro() {
         videoTrack.applyConstraints({advanced: [{...extra, [key]: v}]}).catch(()=>{});
       }, fmt});
   };
-  add('zoom', 'Zoom', v => v.toFixed(1) + '×');
   add('exposureCompensation', 'EV', v => sgn(v, 1));
   add('iso', 'ISO', v => Math.round(v), {exposureMode: 'manual'});
   add('exposureTime', 'Shutter', v => '1/' + Math.round(1e4 / v), {exposureMode: 'manual'});
   add('focusDistance', 'Focus', v => v.toFixed(2) + ' m', {focusMode: 'manual'});
   add('colorTemperature', 'WB', v => Math.round(v) + 'K', {whiteBalanceMode: 'manual'});
-  if (!proList.length) {
-    proList = [{id: 'na', label: 'Info', min: 0, max: 1, step: 1, def: 0,
-      get: () => 0, set: () => {}, fmt: () => 'N/A'}];
-  }
+
+  proList.push({
+    id: 'peaking', label: 'Peaking', min: 0, max: 1, step: 1, def: 0,
+    get: () => state.peaking ? 1 : 0,
+    set: v => { state.peaking = !!v; },
+    fmt: v => v ? 'On' : 'Off'
+  });
+  proList.push({
+    id: 'zebra', label: 'Zebra', min: 0, max: 1, step: 1, def: 0,
+    get: () => state.zebra ? 1 : 0,
+    set: v => { state.zebra = !!v; },
+    fmt: v => v ? 'On' : 'Off'
+  });
+  proList.push({
+    id: 'hist', label: 'Histogram', min: 0, max: 1, step: 1, def: 0,
+    get: () => state.hist ? 1 : 0,
+    set: v => {
+      state.hist = !!v;
+      histCv.classList.toggle('on', state.hist);
+    },
+    fmt: v => v ? 'On' : 'Off'
+  });
+  proList.push({
+    id: 'reset', label: 'Auto', min: 0, max: 1, step: 1, def: 0,
+    get: () => 0,
+    set: () => {
+      videoTrack.applyConstraints({advanced: [
+        {exposureMode: 'continuous', focusMode: 'continuous', whiteBalanceMode: 'continuous'}
+      ]}).catch(()=>{});
+      buildPro();
+    },
+    fmt: () => 'Reset'
+  });
+
   ppPro.rebuild();
 }
 
-/* Look panel */
+/* ---------- Smart panel ---------- */
+function buildSmartPanel() {
+  const p = $('#pSmart');
+  p.innerHTML = `
+    <i class="grab"></i>
+    <div class="feats">
+      <button class="feat" data-k="face" ${faceAvailable ? '' : 'disabled'}>
+        <svg viewBox="0 0 24 24"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="11" r="2.4"/><path d="M8 17c.9-1.8 2.3-2.6 4-2.6s3.1.8 4 2.6"/></svg>
+        <b>Face Lock</b><small>Gimbal to the face</small>
+      </button>
+      <button class="feat" data-k="focus" ${faceAvailable ? '' : 'disabled'}>
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3.5M12 17.5V21M3 12h3.5M17.5 12H21"/></svg>
+        <b>Face Focus</b><small>AF on face</small>
+      </button>
+      <button class="feat" data-k="stab">
+        <svg viewBox="0 0 24 24"><path d="M3 12c2.5-6 5.5-6 9 0s6.5 6 9 0"/></svg>
+        <b>Stabilizer</b><small>Software smoothing</small>
+      </button>
+      <button class="feat" data-k="lock">
+        <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="3"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+        <b>AE/AF Lock</b><small>Freeze exp + focus</small>
+      </button>
+      <button class="feat" data-k="level" style="grid-column:1/-1">
+        <svg viewBox="0 0 24 24"><path d="M3 12h18M6 9v6M18 9v6"/></svg>
+        <b>Level</b><small>Horizon indicator</small>
+      </button>
+    </div>
+    <p class="pnote" id="smartStat">All off. Turn on what you need.</p>
+  `;
+  p.querySelectorAll('.feat').forEach(btn => {
+    btn.onclick = async () => {
+      const k = btn.dataset.k;
+      if (k === 'face') {
+        state.faceLock = !state.faceLock;
+        btn.classList.toggle('on', state.faceLock);
+        if (state.faceLock) {
+          faceLoopActive = true;
+          faceLoop();
+        }
+      } else if (k === 'focus') {
+        state.faceFocus = !state.faceFocus;
+        btn.classList.toggle('on', state.faceFocus);
+        if (state.faceFocus) {
+          faceLoopActive = true;
+          faceLoop();
+          applyFaceFocus();
+        }
+      } else if (k === 'stab') {
+        state.stabilizer = !state.stabilizer;
+        btn.classList.toggle('on', state.stabilizer);
+        if (!state.stabilizer) {
+          state.stabOffset = {x:0, y:0};
+          state.stabTarget = {x:0, y:0};
+          state.stabPan = {x:0, y:0};
+          prevMotionData = null;
+        }
+      } else if (k === 'lock') {
+        const next = !state.lockAEAF;
+        const ok = await setAEAF(next);
+        if (!ok) { showHint('AE/AF Lock not supported on this camera'); return; }
+        state.lockAEAF = next;
+        btn.classList.toggle('on', state.lockAEAF);
+      } else if (k === 'level') {
+        state.level = !state.level;
+        btn.classList.toggle('on', state.level);
+        if (state.level) startLevelTracking();
+        else stopLevelTracking();
+      }
+      updateSmartStat();
+    };
+  });
+  updateSmartStat();
+}
+
+function updateSmartStat() {
+  const parts = [];
+  if (state.faceLock) parts.push('Face Lock');
+  if (state.faceFocus) parts.push('Face Focus');
+  if (state.stabilizer) parts.push('Stabilizer');
+  if (state.lockAEAF) parts.push('AE/AF Lock');
+  if (state.level) parts.push('Level');
+  const el = $('#smartStat');
+  if (!el) return;
+  el.textContent = parts.length ? 'Active: ' + parts.join(' · ') : 'All off. Turn on what you need.';
+}
+
+/* ---------- Look panel ---------- */
 function buildLookPanel() {
   const p = $('#pLook');
-  p.innerHTML = '<i class="grab"></i><div class="presets" id="lookPresets"></div><p style="color:rgba(255,255,255,.6);font-size:12px;margin:6px 2px 0;text-shadow:0 1px 3px rgba(0,0,0,.5)">Tap a look to apply. Double-tap a slider in Adjust to reset it.</p>';
+  p.innerHTML = '<i class="grab"></i><div class="presets" id="lookPresets"></div><p class="pnote">Tap a look to apply. Double-tap a slider in Adjust to reset it.</p>';
   const presets = $('#lookPresets');
   Object.keys(PRESETS).forEach(name => {
     const b = document.createElement('button');
@@ -1184,7 +1623,7 @@ function buildLookPanel() {
   });
 }
 
-/* ---------- UI wiring ---------- */
+/* ---------- mode switching ---------- */
 function setMode(m) {
   state.mode = m;
   const ui = $('#ui');
@@ -1203,7 +1642,7 @@ document.querySelectorAll('#modes button').forEach((btn, i) => {
   };
 });
 
-/* Shutter */
+/* ---------- shutter ---------- */
 shutter.onclick = () => {
   if (state.mode === 'photo') takePhoto();
   else if (state.mode === 'video') recording ? stopRecording() : startRecording();
@@ -1211,10 +1650,9 @@ shutter.onclick = () => {
   else if (state.mode === 'night') captureNight();
 };
 
-/* Flash */
+/* ---------- flash / timer / grid / res / false color ---------- */
 $('#bFlash').onclick = toggleTorch;
 
-/* Timer */
 const TIMERS = [0, 3, 10];
 $('#bTimer').onclick = () => {
   const i = (TIMERS.indexOf(state.timerSec) + 1) % TIMERS.length;
@@ -1223,7 +1661,6 @@ $('#bTimer').onclick = () => {
   $('#bTimer').classList.toggle('act', state.timerSec > 0);
 };
 
-/* Grid */
 $('#bGrid').onclick = () => {
   state.grid = !state.grid;
   $('#bGrid').classList.toggle('act', state.grid);
@@ -1231,7 +1668,6 @@ $('#bGrid').onclick = () => {
   drawGuides();
 };
 
-/* Resolution */
 const RES_LABELS = ['HD', 'FHD', '4K'];
 $('#bRes').onclick = async () => {
   state.resIdx = (state.resIdx + 1) % RES.length;
@@ -1240,26 +1676,25 @@ $('#bRes').onclick = async () => {
   await startCamera();
 };
 
-/* False color */
 $('#bFalse').onclick = () => {
   state.falseColor = !state.falseColor;
   $('#bFalse').classList.toggle('act', state.falseColor);
   showHint(state.falseColor ? 'False colour on' : 'False colour off');
 };
 
-/* Zoom pills */
+/* ---------- zoom pills ---------- */
 document.querySelectorAll('.zoom').forEach(b => {
-  b.onclick = () => setZoom(+b.dataset.z);
+  b.onclick = () => applyZoom(+b.dataset.z);
 });
 
-/* Flip camera */
+/* ---------- flip camera ---------- */
 $('#bFlip').onclick = async () => {
   if (recording) return showHint('Stop recording first');
   state.facing = state.facing === 'environment' ? 'user' : 'environment';
   await startCamera();
 };
 
-/* Thumbnail / viewer */
+/* ---------- viewer / thumbnail ---------- */
 thumb.onclick = () => {
   if (!lastCap) return showHint('Nothing captured yet');
   const w = viewer.querySelector('.vwrap');
@@ -1289,9 +1724,9 @@ $('#vShare').onclick = async () => {
   } catch (e) {}
 };
 
-/* Panel toggles — histogram follows Adjust panel */
-const PANELS = ['pLook', 'pAdjust', 'pPro', 'pAudio'];
-const DOCK_BTNS = ['bLook', 'bAdjust', 'bPro', 'bAudio'];
+/* ---------- panel toggles ---------- */
+const PANELS = ['pLook', 'pAdjust', 'pPro', 'pSmart', 'pAudio'];
+const DOCK_BTNS = ['bLook', 'bAdjust', 'bPro', 'bSmart', 'bAudio'];
 function togglePanel(panelId, btnId) {
   const p = $('#' + panelId);
   const b = $('#' + btnId);
@@ -1309,9 +1744,10 @@ function togglePanel(panelId, btnId) {
 $('#bLook').onclick = () => togglePanel('pLook', 'bLook');
 $('#bAdjust').onclick = () => togglePanel('pAdjust', 'bAdjust');
 $('#bPro').onclick = () => togglePanel('pPro', 'bPro');
+$('#bSmart').onclick = () => togglePanel('pSmart', 'bSmart');
 $('#bAudio').onclick = () => togglePanel('pAudio', 'bAudio');
 
-/* Audio panel controls */
+/* ---------- audio panel controls ---------- */
 $('#audioGain').oninput = (e) => {
   state.gain = +e.target.value;
   e.target.nextElementSibling.textContent = state.gain.toFixed(2) + '×';
@@ -1338,12 +1774,8 @@ $('#aLim').onclick = (e) => {
     comp.ratio.value = state.limiter ? 20 : 1;
   }
 };
-$('#aZebra').onclick = (e) => {
-  state.zebra = !state.zebra;
-  e.currentTarget.classList.toggle('sel', state.zebra);
-};
 
-/* Grab handle drag-to-close */
+/* ---------- grab handle drag-to-close ---------- */
 document.querySelectorAll('.panel').forEach(p => {
   const g = p.querySelector('.grab');
   if (!g) return;
@@ -1367,7 +1799,7 @@ document.querySelectorAll('.panel').forEach(p => {
   g.addEventListener('pointercancel', end);
 });
 
-/* Tap-to-focus (works on the video and the graded canvas) */
+/* ---------- tap-to-focus + tap-to-close-panels ---------- */
 async function focusAt(clientX, clientY) {
   if (!videoTrack) return;
   const rect = video.getBoundingClientRect();
@@ -1386,24 +1818,33 @@ async function focusAt(clientX, clientY) {
     ]});
   } catch (e) {}
 
-  setTimeout(() => {
-    videoTrack.applyConstraints({advanced: [{focusMode: 'continuous'}]}).catch(() => {});
-  }, 1800);
+  if (!state.lockAEAF) {
+    setTimeout(() => {
+      videoTrack.applyConstraints({advanced: [{focusMode: 'continuous'}]}).catch(() => {});
+    }, 1800);
+  }
 }
 document.addEventListener('pointerdown', (e) => {
-  if (e.target === video || e.target === glCanvas) focusAt(e.clientX, e.clientY);
+  if (e.target === video || e.target === glCanvas) {
+    PANELS.forEach(id => $('#' + id).classList.remove('on'));
+    DOCK_BTNS.forEach(id => $('#' + id).classList.remove('act'));
+    histCv.classList.remove('on');
+    state.hist = false;
+    focusAt(e.clientX, e.clientY);
+  }
 }, {passive: true});
 
-/* Render loop */
+/* ---------- render loop ---------- */
 function loop() {
   const vw = video.videoWidth, vh = video.videoHeight;
-  if (vw && vh && video.readyState >= 2 && !busy) {
+
+  if (vw && vh && video.readyState >= 2) {
     if (glCanvas.width !== vw || glCanvas.height !== vh) resizeCanvas();
 
-    // Always grade while recording so captureStream sees frames.
-    const graded = !isIdentity() || recording;
+    updateStabilizer();
 
-    if (graded) {
+    const needsGrade = !isIdentity() || recording;
+    if (needsGrade) {
       video.style.display = 'none';
       glCanvas.style.display = 'block';
       drawGraded(video);
@@ -1412,10 +1853,17 @@ function loop() {
       glCanvas.style.display = 'none';
     }
 
-    // Mirror the front camera on-screen only (saved files stay unmirrored).
     const mir = state.facing === 'user' ? 'scaleX(-1)' : '';
     video.style.transform = mir;
     glCanvas.style.transform = mir;
+
+    updateFaceBox();
+    updateLevelDisplay();
+
+    if (state.faceFocus && state.faceCenter && performance.now() - lastHist > 800) {
+      lastHist = performance.now();
+      applyFaceFocus();
+    }
   }
 
   if (state.hist && performance.now() - lastHist > 250) {
@@ -1425,11 +1873,12 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
-/* Boot */
+/* ---------- boot ---------- */
 (async function boot() {
   try {
     initGL();
     buildLookPanel();
+    buildSmartPanel();
     await startCamera();
     requestAnimationFrame(loop);
   } catch (e) {
