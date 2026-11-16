@@ -2,1454 +2,1441 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Car AR</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0e0f11">
+<title>Cam Pro</title>
 <style>
-  :root{--bg:#0e0f11;--surface:#17191c;--surface2:#23262b;--line:#2c3036;--ink:#f1f1ee;--dim:#8b8f96;--white:#f5f5f2;--rec:#ff453a;
-        --out:cubic-bezier(.22,1,.36,1);--spring:cubic-bezier(.34,1.45,.64,1);--inout:cubic-bezier(.65,0,.35,1)}
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:15px/1.45 Inter,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased}
-  button{font:inherit;color:inherit;border:0;cursor:pointer;background:none;padding:0}
-  button{transition:transform .14s var(--inout),background-color .25s var(--out),color .25s var(--out),opacity .25s var(--out)}
-  button:active{transform:scale(.93)}
-  button.jump{animation:jump .46s both}
-  @keyframes jump{
-    0%{transform:scale(.93);animation-timing-function:cubic-bezier(.2,.9,.3,1)}
-    38%{transform:translateY(-6px) scale(1.04);animation-timing-function:cubic-bezier(.5,0,.6,1)}
-    70%{transform:translateY(1px) scale(.99);animation-timing-function:cubic-bezier(.3,.7,.4,1)}
-    100%{transform:none}}
-  :focus-visible{outline:2px solid var(--white);outline-offset:3px}
+:root{
+  --bg:#0e0f11;--surface:#17191c;--surface2:#23262b;--line:#2c3036;--ink:#f1f1ee;--dim:#8b8f96;
+  --white:#f5f5f2;--rec:#ff453a;--ice:#58aeff;
+  --out:cubic-bezier(.22,1,.36,1);--spring:cubic-bezier(.34,1.45,.64,1);--inout:cubic-bezier(.65,0,.35,1);
+  --glass:linear-gradient(135deg,rgba(255,255,255,.34) 0%,rgba(255,255,255,.10) 28%,rgba(255,255,255,.03) 55%,rgba(255,255,255,.16) 100%),rgba(255,255,255,.04);
+  --rim:rgba(255,255,255,.38);
+  --lift:0 8px 24px rgba(0,0,0,.22),0 1px 0 rgba(255,255,255,.7) inset,0 0 0 1px rgba(255,255,255,.10) inset
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+  font:15px/1.45 Inter,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased;overflow:hidden;overscroll-behavior:none;user-select:none}
+button{font:inherit;color:inherit;border:0;cursor:pointer;background:none;padding:0;
+  transition:transform .14s var(--inout),background-color .25s var(--out),color .25s var(--out),opacity .25s var(--out)}
+button:active{transform:scale(.93)}
+:focus-visible{outline:2px solid var(--white);outline-offset:3px}
+video#pv{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;background:#000;z-index:0;transform-origin:center}
+canvas#gl{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;display:none;transform-origin:center}
+canvas#guides{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;pointer-events:none;opacity:0;transition:opacity .35s var(--out)}
+canvas#guides.on{opacity:1}
+#ui{position:fixed;inset:0;pointer-events:none;z-index:3}
+#ui .hit{pointer-events:auto}
 
-  #landing{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:32px 24px calc(28px + env(safe-area-inset-bottom));background:var(--bg)}
-  #landing>*{animation:rise .7s var(--out) both}
-  #landing h1{animation-delay:.05s}#landing p{animation-delay:.14s}#landing #start{animation-delay:.23s}#landing #msg{animation-delay:.3s}
-  @keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
-  #landing h1{font-size:40px;line-height:1.05;margin:0 0 12px;font-weight:600;letter-spacing:-.03em}
-  #landing p{color:var(--dim);margin:0 0 28px;max-width:34ch}
-  #start{background:var(--white);color:#111;font-weight:600;height:56px;border-radius:16px;font-size:16px;width:100%}
-  #start:disabled{background:var(--surface2);color:var(--dim);cursor:default}
-  #msg{margin-top:14px;color:var(--dim);font-size:13px;min-height:1.4em}
+#top{position:absolute;top:calc(10px + env(safe-area-inset-top));left:12px;right:12px;
+  display:flex;justify-content:space-between;align-items:center;gap:8px;z-index:5}
+#top .grp{display:flex;gap:8px;flex-wrap:nowrap}
+.tbtn{height:40px;min-width:40px;padding:0 11px;border-radius:999px;
+  display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:600;
+  background:var(--glass);border:1px solid var(--rim);box-shadow:var(--lift);
+  -webkit-backdrop-filter:blur(10px) saturate(1.6);backdrop-filter:blur(10px) saturate(1.6);
+  text-shadow:0 1px 3px rgba(0,0,0,.55)}
+.tbtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 1px 2px rgba(0,0,0,.55))}
+.tbtn.act{background:linear-gradient(180deg,#fff,#f1efe9 50%,#d8d5cc 100%);color:#16181b;border-color:#fff;text-shadow:none;
+  box-shadow:0 8px 20px rgba(0,0,0,.35),0 1px 0 #fff inset,0 0 20px rgba(255,255,255,.28)}
+.tbtn.act svg{filter:none}
+.tbtn .lbl{font-size:11px;font-weight:600}
 
-  #ui{position:fixed;inset:0;display:none;pointer-events:none;color:var(--ink)}
-  #ui.on{display:block}
-  #ui .hit{pointer-events:auto}
-  #hint{position:absolute;top:calc(14px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--line);padding:9px 16px;border-radius:12px;font-size:14px;white-space:nowrap;transition:opacity .35s var(--out),transform .5s var(--spring)}
-  #hint.off{opacity:0;transform:translate(-50%,-10px)}
-  #timer{position:absolute;top:calc(64px + env(safe-area-inset-top));left:50%;transform:translate(-50%,-8px);background:var(--rec);padding:3px 10px;border-radius:8px;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;opacity:0;transition:opacity .3s var(--out),transform .5s var(--spring)}
-  #timer.on{opacity:1;transform:translate(-50%,0)}
-  #thumb{position:absolute;left:14px;top:calc(14px + env(safe-area-inset-top));width:60px;height:60px;border-radius:14px;object-fit:cover;border:2px solid var(--white);opacity:0;transform:scale(.6);pointer-events:none;transition:opacity .3s var(--out),transform .55s var(--spring)}
-  #thumb.on{opacity:1;transform:none;pointer-events:auto}
+#hist{position:absolute;left:12px;top:calc(60px + env(safe-area-inset-top));width:96px;height:42px;
+  border-radius:18px;background:var(--glass);border:1px solid var(--rim);box-shadow:var(--lift);
+  -webkit-backdrop-filter:blur(10px) saturate(1.6);backdrop-filter:blur(10px) saturate(1.6);display:none}
+#hist.on{display:block}
 
-  #bar{position:absolute;left:0;right:0;bottom:0;padding:12px 18px calc(18px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:space-between}
-  .chip{width:58px;height:58px;border-radius:16px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;font-weight:500}
-  .chip svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-  .chip.act{background:var(--white);color:#111;border-color:var(--white)}
-  #shutter{width:72px;height:72px;border-radius:50%;border:3px solid var(--white);display:grid;place-items:center}
-  #shutter::after{content:"";width:56px;height:56px;border-radius:50%;background:var(--white);transition:transform .3s var(--spring)}
-  #shutter:active::after{transform:scale(.88)}
-  #rec{width:58px;height:58px;border-radius:16px;background:var(--surface);border:1px solid var(--line);display:grid;place-items:center}
-  #rec i{width:22px;height:22px;border-radius:11px;background:var(--rec);transition:border-radius .4s var(--spring),transform .4s var(--spring)}
-  #rec.on i{border-radius:6px;transform:scale(.8)}
+#hint{position:absolute;top:calc(110px + env(safe-area-inset-top));left:50%;transform:translate(-50%,-10px);
+  background:var(--glass);border:1px solid var(--rim);padding:9px 16px;border-radius:999px;
+  font-size:13px;white-space:nowrap;opacity:0;transition:opacity .3s var(--out),transform .5s var(--spring);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);text-shadow:0 1px 3px rgba(0,0,0,.5);z-index:6;max-width:88%}
+#hint.on{opacity:1;transform:translate(-50%,0)}
 
-  #ui .panel{position:absolute;left:12px;right:12px;bottom:calc(100px + env(safe-area-inset-bottom));background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:16px;max-height:46vh;overflow:auto;
-    opacity:0;visibility:hidden;transform:translateY(18px) scale(.97);pointer-events:none;
-    transition:opacity .3s var(--out),transform .5s var(--spring),visibility 0s .3s}
-  #ui .panel.on{opacity:1;visibility:visible;transform:none;pointer-events:auto;transition:opacity .3s var(--out),transform .5s var(--spring),visibility 0s}
-  .row{display:grid;grid-template-columns:96px 1fr 44px;align-items:center;gap:8px;margin:4px 0}
-  .row label{color:var(--dim);font-size:13px}
-  .row output{font-size:12px;text-align:right;font-variant-numeric:tabular-nums;color:var(--dim)}
-  .presets{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
-  .presets button,.panel .btn{background:var(--surface2);padding:9px 14px;border-radius:12px;font-size:13px;font-weight:500}
-  .presets button.sel{background:var(--white);color:#111}
-  .panel .btn{margin-top:8px;margin-right:6px}
-  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:24px;background:none;margin:0}
-  input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:var(--line)}
-  input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:var(--line)}
-  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--white);margin-top:-8px;transition:transform .25s var(--spring)}
-  input[type=range]::-moz-range-thumb{width:20px;height:20px;border:0;border-radius:50%;background:var(--white)}
-  input[type=range]:active::-webkit-slider-thumb{transform:scale(1.2)}
+#timer{position:absolute;top:calc(60px + env(safe-area-inset-top));left:50%;transform:translate(-50%,-8px);
+  background:linear-gradient(180deg,#ff7b70,#e0372d);padding:4px 12px;border-radius:999px;
+  font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;opacity:0;
+  border:1px solid rgba(255,255,255,.3);box-shadow:0 6px 16px rgba(224,55,45,.45),0 1px 0 rgba(255,255,255,.45) inset;
+  transition:opacity .3s var(--out),transform .5s var(--spring);z-index:6}
+#timer.on{opacity:1;transform:translate(-50%,0)}
 
-  #fallback{position:fixed;inset:0;display:none;flex-direction:column;background:var(--bg)}
-  #fallback model-viewer{flex:1;width:100%;--poster-color:transparent}
-  #fallback p{margin:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));color:var(--dim);font-size:13px}
-  #arBtn{position:absolute;left:50%;bottom:calc(70px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--white);color:#111;font-weight:600;padding:0 26px;height:52px;border-radius:16px}
-  #arBtn:active{transform:translateX(-50%) scale(.95)}
-  @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
-  [hidden]{display:none!important}
-  #ui{z-index:2}#landing,#fallback{z-index:3}
-  .alt{height:52px;border-radius:16px;width:100%;margin-top:10px;font-weight:500;border:1px solid var(--line);color:var(--ink)}
-  #landing{display:none!important}
-  #top{position:absolute;top:calc(10px + env(safe-area-inset-top));left:12px;right:12px;display:flex;justify-content:space-between;align-items:center;gap:8px}
-  #top .grp{display:flex;gap:8px}
-  .tbtn{height:40px;min-width:40px;padding:0 11px;border-radius:12px;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:600}
-  .tbtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-  .tbtn.act{background:var(--white);color:#111;border-color:var(--white)}
-  .sw{height:40px;padding:0 12px;border-radius:12px;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;cursor:pointer;transition:transform .14s var(--inout)}
-  .sw:active{transform:scale(.94)}
-  .sw input{display:none}
-  .sw i{width:38px;height:22px;border-radius:11px;background:var(--line);position:relative;transition:background-color .3s var(--out)}
-  .sw i::after{content:"";position:absolute;left:2px;top:2px;width:18px;height:18px;border-radius:50%;background:var(--white);transition:transform .45s var(--spring),background-color .3s var(--out)}
-  .sw input:checked+i{background:var(--white)}
-  .sw input:checked+i::after{transform:translateX(16px);background:#111}
-  #hist{position:absolute;left:12px;top:calc(60px + env(safe-area-inset-top));width:84px;height:36px;border-radius:8px;background:var(--surface);border:1px solid var(--line);transition:opacity .3s var(--out)}
-  #grid{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .35s var(--out)}
-  #grid.on{opacity:1}
-  #grid b{position:absolute;background:#ffffff80}
-  #grid b:nth-child(1),#grid b:nth-child(2){top:0;bottom:0;width:1px}
-  #grid b:nth-child(3),#grid b:nth-child(4){left:0;right:0;height:1px}
-  #grid b:nth-child(1){left:33.333%}#grid b:nth-child(2){left:66.666%}#grid b:nth-child(3){top:33.333%}#grid b:nth-child(4){top:66.666%}
-  #level{position:absolute;left:50%;top:50%;width:90px;height:2px;background:var(--white);opacity:0;transition:opacity .3s var(--out),background-color .3s var(--out)}
-  #level.ok{background:#3ddc84}
-  #focusRing{position:absolute;width:72px;height:72px;margin:-36px 0 0 -36px;border:2px solid var(--white);border-radius:20px;opacity:0;pointer-events:none}
-  #focusRing.show{animation:focus .9s both}
-  @keyframes focus{0%{opacity:0;transform:scale(1.5);animation-timing-function:cubic-bezier(.2,.9,.3,1)}25%{opacity:1;transform:scale(1)}80%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.95)}}
-  #count{position:absolute;inset:0;display:grid;place-items:center;font-size:120px;font-weight:600;pointer-events:none;opacity:0;text-shadow:0 2px 14px #0009}
-  #count.pop{animation:cpop 1s both}
-  @keyframes cpop{0%{opacity:0;transform:scale(1.6);animation-timing-function:cubic-bezier(.2,.9,.3,1)}20%{opacity:1;transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:scale(.9)}}
-  #shot{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
-  #shot.go{animation:flash .35s var(--out)}
-  @keyframes flash{0%{opacity:.85}100%{opacity:0}}
-  #hint{top:calc(110px + env(safe-area-inset-top))}
-  #timer{top:calc(152px + env(safe-area-inset-top))}
-  #bar{padding:12px 28px calc(18px + env(safe-area-inset-bottom))}
-  #bar #thumb{position:static;width:52px;height:52px;border-radius:14px;opacity:1;transform:none;pointer-events:auto;border:1px solid var(--line);background:var(--surface2);object-fit:cover}
-  #bar #thumb.on{border:2px solid var(--white)}
-  #modes{position:absolute;left:0;right:0;bottom:calc(112px + env(safe-area-inset-bottom));display:flex;justify-content:center;gap:4px}
-  #modes button{padding:7px 14px;border-radius:10px;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
-  #modes button.sel{color:var(--ink);background:var(--surface)}
-  #dock{position:absolute;left:0;right:0;bottom:calc(152px + env(safe-area-inset-bottom));display:flex;justify-content:center;gap:8px}
-  #dock .chip{width:auto;height:40px;flex-direction:row;padding:0 14px;border-radius:14px;gap:8px;font-size:13px}
-  #ui.vid #shutter::after{background:var(--rec)}
-  #shutter.rec::after{border-radius:16px;transform:scale(.55)}
-  #ui .panel{bottom:calc(200px + env(safe-area-inset-bottom));max-height:40vh}
-  .note{color:var(--dim);font-size:13px;margin:4px 0 8px}
-  #ui.arx .camonly,#ui.arx .proonly,#ui:not(.ar) .aronly{display:none}
-  #err{position:absolute;top:calc(60px + env(safe-area-inset-top));left:12px;right:12px;background:var(--surface);border:1px solid var(--rec);border-radius:14px;padding:12px;display:none;z-index:9;max-height:40vh;overflow:auto}
-  #err.on{display:block}
-  #err pre{margin:0 0 8px;font:12px/1.4 ui-monospace,monospace;white-space:pre-wrap;word-break:break-word;user-select:text;-webkit-user-select:text}
-  #pv{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;display:none;background:#000}
-  #pv.mirror{transform:scaleX(-1)}
+#focusRing{position:absolute;width:72px;height:72px;margin:-36px 0 0 -36px;border:2px solid #fff;border-radius:18px;
+  opacity:0;pointer-events:none;box-shadow:0 0 16px rgba(255,255,255,.5),0 0 0 1px rgba(0,0,0,.25) inset}
+#focusRing.show{animation:focus .9s both}
+@keyframes focus{
+  0%{opacity:0;transform:scale(1.5);animation-timing-function:cubic-bezier(.2,.9,.3,1)}
+  25%{opacity:1;transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:scale(.95)}}
 
-  /* ===== Glossy glass skin ===== */
-  :root{--glass:linear-gradient(180deg,rgba(255,255,255,.22) 0%,rgba(255,255,255,.07) 40%,rgba(255,255,255,.02) 100%),rgba(22,24,29,.5);
-        --rim:rgba(255,255,255,.24);--lift:0 10px 28px rgba(0,0,0,.38),0 1px 0 rgba(255,255,255,.32) inset,0 -1px 0 rgba(0,0,0,.28) inset;--ice:#58aeff}
-  .tbtn,.sw,.chip,#dock .chip,#hist,#hint,#bar #thumb,#modes button.sel,#err,#ui .panel,.presets button,.panel .btn{
-    background:var(--glass);border:1px solid var(--rim);box-shadow:var(--lift);
-    -webkit-backdrop-filter:blur(22px) saturate(1.7);backdrop-filter:blur(22px) saturate(1.7)}
-  #ui .panel{border-radius:26px;-webkit-backdrop-filter:blur(30px) saturate(1.8);backdrop-filter:blur(30px) saturate(1.8)}
-  #err{border-color:rgba(255,69,58,.7)}
-  #modes button{text-shadow:0 1px 6px rgba(0,0,0,.6);color:rgba(255,255,255,.78)}
-  #modes button.sel{color:#fff}
-  .tbtn svg,.chip svg{filter:drop-shadow(0 1px 1px rgba(0,0,0,.45))}
+#count{position:absolute;inset:0;display:grid;place-items:center;font-size:120px;font-weight:600;
+  pointer-events:none;opacity:0;text-shadow:0 2px 14px #0009;z-index:7}
+#count.pop{animation:cpop 1s both}
+@keyframes cpop{
+  0%{opacity:0;transform:scale(1.6);animation-timing-function:cubic-bezier(.2,.9,.3,1)}
+  20%{opacity:1;transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:scale(.9)}}
 
-  .tbtn.act,.chip.act,#dock .chip.act,.presets button.sel,.presets .btn.sel{
-    background:linear-gradient(180deg,#ffffff 0%,#f1efe9 50%,#d8d5cc 100%);color:#16181b;border-color:#fff;
-    box-shadow:0 8px 20px rgba(0,0,0,.35),0 1px 0 #fff inset,0 -2px 4px rgba(0,0,0,.12) inset,0 0 20px rgba(255,255,255,.28)}
-  .tbtn.act svg,.chip.act svg{filter:none}
-  #bar #thumb.on{border-color:#fff;box-shadow:var(--lift),0 0 18px rgba(255,255,255,.3)}
+#shot{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:8}
+#shot.go{animation:flash .35s var(--out)}
+@keyframes flash{0%{opacity:.85}100%{opacity:0}}
 
-  #shutter{width:78px;height:78px;border:3px solid rgba(255,255,255,.92);background:rgba(255,255,255,.1);
-    box-shadow:0 12px 30px rgba(0,0,0,.42),0 0 0 1px rgba(255,255,255,.28) inset;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
-  #shutter::after{width:62px;height:62px;background:radial-gradient(120% 120% at 32% 18%,#fff 0%,#f3f2ed 42%,#cdcbc2 100%);
-    box-shadow:0 3px 8px rgba(0,0,0,.35),0 1px 0 #fff inset}
-  #ui.vid #shutter::after{background:radial-gradient(120% 120% at 32% 18%,#ff9a90 0%,#ff453a 45%,#bf1f17 100%);box-shadow:0 3px 10px rgba(255,69,58,.45),0 1px 0 rgba(255,255,255,.5) inset}
+#dock{position:absolute;left:0;right:0;bottom:calc(168px + env(safe-area-inset-bottom));
+  display:flex;justify-content:center;gap:8px;padding:0 12px;overflow-x:auto;scrollbar-width:none;z-index:5}
+#dock::-webkit-scrollbar{display:none}
+#dock .chip{flex:none;height:44px;padding:0 16px;border-radius:999px;
+  display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;
+  background:var(--glass);border:1px solid var(--rim);box-shadow:var(--lift);
+  -webkit-backdrop-filter:blur(10px) saturate(1.6);backdrop-filter:blur(10px) saturate(1.6);
+  text-shadow:0 1px 3px rgba(0,0,0,.55);color:#fff}
+#dock .chip svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+#dock .chip.act{background:linear-gradient(180deg,#fff,#f1efe9 50%,#d8d5cc 100%);color:#16181b;border-color:#fff;text-shadow:none;
+  box-shadow:0 8px 20px rgba(0,0,0,.35),0 1px 0 #fff inset,0 0 20px rgba(255,255,255,.28)}
+#dock .chip.act svg{filter:none}
 
-  .sw i{background:rgba(255,255,255,.2);box-shadow:inset 0 1px 3px rgba(0,0,0,.5)}
-  .sw i::after{background:radial-gradient(circle at 35% 25%,#fff,#d8d6ce);box-shadow:0 2px 5px rgba(0,0,0,.45),0 1px 0 #fff inset}
-  .sw input:checked+i{background:linear-gradient(180deg,#9fd2ff,var(--ice) 55%,#2f86e6);box-shadow:inset 0 1px 3px rgba(0,0,0,.3),0 0 14px rgba(88,174,255,.5)}
-  .sw input:checked+i::after{background:radial-gradient(circle at 35% 25%,#fff,#d8d6ce)}
+#modes{position:absolute;left:50%;bottom:calc(116px + env(safe-area-inset-bottom));transform:translateX(-50%);
+  display:flex;gap:0;padding:4px;border-radius:999px;background:var(--glass);border:1px solid var(--rim);
+  box-shadow:var(--lift);-webkit-backdrop-filter:blur(10px) saturate(1.6);backdrop-filter:blur(10px) saturate(1.6);z-index:5}
+#modes::before{content:"";position:absolute;left:4px;top:4px;bottom:4px;width:82px;border-radius:999px;
+  background:linear-gradient(180deg,#fff,#e9e7e0 55%,#d6d3ca);
+  box-shadow:0 4px 12px rgba(0,0,0,.3),0 1px 0 #fff inset;
+  transform:translateX(calc(var(--i,0) * 82px));transition:transform .55s var(--spring)}
+#modes button{position:relative;width:82px;padding:8px 0;background:none;border:0;border-radius:999px;
+  color:rgba(255,255,255,.85);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+  text-shadow:0 1px 3px rgba(0,0,0,.55);transition:color .3s var(--out)}
+#modes button.sel{color:#16181b;text-shadow:none}
 
-  input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:rgba(255,255,255,.18);box-shadow:inset 0 1px 2px rgba(0,0,0,.45)}
-  input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:rgba(255,255,255,.18)}
-  input[type=range]::-webkit-slider-thumb{width:22px;height:22px;margin-top:-8px;background:radial-gradient(circle at 35% 25%,#fff,#d6d4cc);box-shadow:0 3px 8px rgba(0,0,0,.45),0 1px 0 #fff inset}
-  input[type=range]::-moz-range-thumb{width:22px;height:22px;background:radial-gradient(circle at 35% 25%,#fff,#d6d4cc)}
+#bar{position:absolute;left:0;right:0;bottom:0;padding:12px 28px calc(18px + env(safe-area-inset-bottom));
+  display:flex;align-items:center;justify-content:space-between;z-index:5}
+#thumb{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;
+  background:var(--glass);border:1px solid var(--rim);box-shadow:var(--lift);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);background-size:cover;background-position:center;overflow:hidden}
+#thumb svg{width:24px;height:24px;fill:none;stroke:#fff;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 1px 2px rgba(0,0,0,.55))}
+#thumb.on{border:2px solid rgba(255,255,255,.85)}
+#thumb.on svg{display:none}
 
-  #timer{background:linear-gradient(180deg,#ff7b70,#e0372d);box-shadow:0 6px 16px rgba(224,55,45,.45),0 1px 0 rgba(255,255,255,.45) inset;border:1px solid rgba(255,255,255,.3)}
-  #focusRing{box-shadow:0 0 16px rgba(255,255,255,.5),0 0 0 1px rgba(0,0,0,.25) inset}
-  .row label,.row output,.note{color:rgba(255,255,255,.72)}
+#shutter{position:relative;width:88px;height:88px;border:0;background:none;border-radius:50%;display:grid;place-items:center}
+#shutter::before{content:"";position:absolute;inset:0;border-radius:50%;--c:#fff;--pp:0;
+  background:conic-gradient(var(--c) calc(var(--pp) * 1%),rgba(255,255,255,.55) 0);
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));
+  mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,.35));transition:--pp .5s linear}
+#shutter.rec::before{--c:var(--rec)}
+#shutter .core{width:70px;height:70px;border-radius:50%;
+  background:radial-gradient(120% 120% at 32% 18%,#fff 0%,#f3f2ed 42%,#cdcbc2 100%);
+  box-shadow:0 4px 12px rgba(0,0,0,.4),0 1px 0 #fff inset,0 -3px 6px rgba(0,0,0,.12) inset;
+  transition:width .55s var(--spring),height .55s var(--spring),border-radius .55s var(--spring),background .4s var(--out),transform .2s var(--inout)}
+#shutter:active .core{transform:scale(.9)}
+#ui.vid #shutter .core{background:radial-gradient(120% 120% at 32% 18%,#ff9d93 0%,#ff453a 45%,#b91d15 100%);
+  box-shadow:0 4px 14px rgba(255,69,58,.5),0 1px 0 rgba(255,255,255,.55) inset,0 -3px 6px rgba(0,0,0,.2) inset}
+#ui.ultra #shutter .core{background:radial-gradient(120% 120% at 32% 18%,#9fd2ff,#58aeff 45%,#2f86e6)}
+#ui.night #shutter .core{background:radial-gradient(120% 120% at 32% 18%,#d1a0ff,#8a5cf5 45%,#5a2fc9)}
+#shutter.rec .core{width:34px;height:34px;border-radius:11px;animation:breathe 1.8s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(.86)}}
+#shutter .rip{position:absolute;inset:8px;border-radius:50%;border:2px solid #fff;opacity:0;pointer-events:none}
+#shutter.snap .rip{animation:ripple .6s cubic-bezier(.2,.8,.2,1)}
+@keyframes ripple{0%{opacity:.9;transform:scale(.8)}100%{opacity:0;transform:scale(1.55)}}
+#bFlip{width:54px;height:54px;border-radius:50%;background:var(--glass);border:1px solid var(--rim);box-shadow:var(--lift);
+  display:grid;place-items:center}
+#bFlip svg{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 1px 2px rgba(0,0,0,.55))}
 
-  /* ===== Clear glass ===== */
-  :root{--glass:linear-gradient(135deg,rgba(255,255,255,.34) 0%,rgba(255,255,255,.10) 28%,rgba(255,255,255,.03) 55%,rgba(255,255,255,.16) 100%),rgba(255,255,255,.04);
-        --rim:rgba(255,255,255,.38);
-        --lift:0 8px 24px rgba(0,0,0,.22),0 1px 0 rgba(255,255,255,.7) inset,0 0 0 1px rgba(255,255,255,.10) inset,0 -10px 18px rgba(255,255,255,.06) inset}
-  .tbtn,.sw,.chip,#dock .chip,#hist,#hint,#bar #thumb,#modes button.sel,#err,#ui .panel,.presets button,.panel .btn,#viewer .btn{
-    background:var(--glass);border:1px solid var(--rim);box-shadow:var(--lift);
-    -webkit-backdrop-filter:blur(10px) saturate(1.6) brightness(1.08);backdrop-filter:blur(10px) saturate(1.6) brightness(1.08)}
-  #ui .panel{background:var(--glass),rgba(8,10,14,.16);-webkit-backdrop-filter:blur(16px) saturate(1.7) brightness(1.05);backdrop-filter:blur(16px) saturate(1.7) brightness(1.05)}
-  #err{background:var(--glass),rgba(8,10,14,.3)}
-  .tbtn,.sw,.chip,#dock .chip,#hint,#hist,.presets button,.panel .btn,.row label,.row output,.note,#modes button{text-shadow:0 1px 3px rgba(0,0,0,.55)}
-  .tbtn svg,.chip svg,#thumb svg{filter:drop-shadow(0 1px 2px rgba(0,0,0,.55))}
-  #shutter{background:rgba(255,255,255,.06);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+#rail{position:absolute;right:12px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;z-index:5}
+.zoom{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;
+  background:var(--glass);border:1px solid var(--rim);box-shadow:var(--lift);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5);
+  transition:transform .14s var(--inout),background .3s var(--out),color .3s var(--out)}
+.zoom.on{background:linear-gradient(180deg,#fff,#ecebe4);color:#111;text-shadow:none;border-color:#fff}
 
-  #bar #thumb{position:relative;width:54px;height:54px;border-radius:16px;display:grid;place-items:center;background-size:cover;background-position:center;overflow:hidden;padding:0}
-  #thumb svg{width:24px;height:24px;fill:none;stroke:#fff;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;transition:opacity .3s var(--out),transform .5s var(--spring)}
-  #bar #thumb.on{background-image:var(--glass);border:2px solid rgba(255,255,255,.85)}
-  #thumb.on svg{opacity:0;transform:scale(.6)}
-  #thumb.isvid.on{background:var(--glass)}
-  #thumb.isvid.on svg{display:none}
-  #thumb.isvid.on::after{content:"";width:0;height:0;border-left:14px solid #fff;border-top:9px solid transparent;border-bottom:9px solid transparent;margin-left:4px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
-  #thumb.pulse{animation:cpulse .6s both}
-  @keyframes cpulse{0%{transform:scale(.7);animation-timing-function:cubic-bezier(.34,1.5,.64,1)}100%{transform:none}}
-  #thumb.on::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.4),rgba(255,255,255,0) 45%);pointer-events:none}
+.panel{position:absolute;left:12px;right:12px;bottom:calc(228px + env(safe-area-inset-bottom));
+  background:var(--glass),rgba(8,10,14,.16);border:1px solid var(--rim);border-radius:32px;padding:18px;
+  max-height:44vh;overflow:auto;opacity:0;visibility:hidden;transform:translateY(18px) scale(.97);
+  pointer-events:none;transition:opacity .3s var(--out),transform .5s var(--spring),visibility 0s .3s;
+  -webkit-backdrop-filter:blur(16px) saturate(1.7) brightness(1.05);backdrop-filter:blur(16px) saturate(1.7) brightness(1.05);
+  box-shadow:var(--lift);z-index:6}
+.panel.on{opacity:1;visibility:visible;transform:none;pointer-events:auto;transition:opacity .3s var(--out),transform .5s var(--spring),visibility 0s}
+.grab{display:block;position:relative;height:26px;margin:-2px 0 4px;touch-action:none;cursor:grab}
+.grab::after{content:"";position:absolute;left:50%;top:10px;width:44px;height:5px;margin-left:-22px;border-radius:3px;background:rgba(255,255,255,.6)}
 
-  #viewer{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:calc(20px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom));
-    background:rgba(6,7,9,.55);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);opacity:0;visibility:hidden;transition:opacity .3s var(--out),visibility 0s .3s}
-  #viewer.on{opacity:1;visibility:visible;transition:opacity .3s var(--out),visibility 0s}
-  #viewer .vwrap{flex:1;min-height:0;width:100%;display:grid;place-items:center;transform:scale(.94);transition:transform .5s var(--spring)}
-  #viewer.on .vwrap{transform:none}
-  #viewer .vwrap img,#viewer .vwrap video{max-width:100%;max-height:100%;border-radius:22px;box-shadow:0 20px 50px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.25)}
-  #viewer .vbar{display:flex;gap:10px}
-  #viewer .btn{padding:11px 20px;border-radius:14px;font-size:14px;font-weight:600}
+.row{display:grid;grid-template-columns:96px 1fr 44px;align-items:center;gap:8px;margin:8px 0}
+.row label{color:rgba(255,255,255,.72);font-size:13px;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.row output{font-size:12px;text-align:right;font-variant-numeric:tabular-nums;color:rgba(255,255,255,.72);text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.row select{grid-column:2/4;background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.2);
+  border-radius:10px;padding:8px 10px;font-size:13px;outline:none}
+.row select option{background:#23262b;color:#fff}
 
-  /* ===== One corner system: pills for controls, circles for icon buttons, one large radius for sheets ===== */
-  .tbtn,.sw,.chip,#dock .chip,#hint,#timer,#modes button,.presets button,.panel .btn,#viewer .btn{border-radius:999px}
-  .tbtn{padding:0 15px}
-  #dock .chip{padding:0 18px}
-  #bFlip.chip,#bar #thumb{width:54px;height:54px;border-radius:50%}
-  #hist{border-radius:18px}
-  #ui .panel{border-radius:32px;padding:18px}
-  #err{border-radius:24px}
-  #focusRing{border-radius:18px}
-  #viewer .vwrap img,#viewer .vwrap video{border-radius:30px}
-  #thumb.on::before{border-radius:50%}
-  @supports (corner-shape:squircle){
-    #ui .panel,#err,#hist,#focusRing,#viewer .vwrap img,#viewer .vwrap video{corner-shape:squircle}
-    #ui .panel{border-radius:40px}
-    #viewer .vwrap img,#viewer .vwrap video{border-radius:38px}
-  }
-  .clk .ring{opacity:.4}
-  .clk .arc{stroke-width:2.4;stroke-linecap:butt;stroke-dasharray:var(--p,0) 100;transform:rotate(-90deg);transform-box:view-box;transform-origin:12px 13px;transition:stroke-dasharray .7s cubic-bezier(.22,1,.36,1)}
-  .clk .hand{transform-box:view-box;transform-origin:12px 13px;transform:rotate(var(--a,0deg));transition:transform .7s cubic-bezier(.34,1.56,.64,1)}
+.presets{display:flex;gap:8px;margin:8px 0;flex-wrap:wrap}
+.presets button,.panel .btn{padding:9px 14px;border-radius:999px;font-size:13px;font-weight:600;
+  background:var(--glass);border:1px solid var(--rim);box-shadow:var(--lift);color:#fff;
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.presets button.sel,.presets .btn.sel{background:linear-gradient(180deg,#fff,#f1efe9 50%,#d8d5cc 100%);color:#16181b;border-color:#fff;text-shadow:none}
 
-  /* ===== Ruler panels, look cards, smart cards ===== */
-  @property --pp{syntax:'<number>';inherits:false;initial-value:0}
-  #ui .panel{padding-top:10px}
-  .grab{display:block;position:relative;height:26px;margin:-2px 0 4px;touch-action:none;cursor:grab}
-  .grab::after{content:"";position:absolute;left:50%;top:10px;width:44px;height:5px;margin-left:-22px;border-radius:3px;background:rgba(255,255,255,.6)}
-  .pchips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 12px;-webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)}
-  .pchips::-webkit-scrollbar,.looks::-webkit-scrollbar,.ruler::-webkit-scrollbar{display:none}
-  .pchips button{flex:none;display:flex;gap:8px;align-items:baseline;padding:8px 14px;border-radius:999px;font-size:13px;font-weight:600;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.22);text-shadow:0 1px 3px rgba(0,0,0,.5)}
-  .pchips button i{font-style:normal;font-size:11px;font-weight:500;opacity:.6}
-  .pchips button.mod i{opacity:1;color:var(--ice)}
-  .pchips button.sel{background:linear-gradient(180deg,#fff,#e8e6df);color:#16181b;border-color:#fff;text-shadow:none;box-shadow:0 6px 16px rgba(0,0,0,.3),0 0 16px rgba(255,255,255,.25)}
-  .pchips button.sel i{color:#555;opacity:1}
-  .pread{display:flex;align-items:baseline;justify-content:center;gap:10px;padding:2px 0 6px}
-  .pread b{font-size:38px;font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums;text-shadow:0 2px 10px rgba(0,0,0,.45)}
-  .pread small{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.7)}
-  .pp.empty{display:none}
-  .rwrap{position:relative}
-  .ruler{overflow-x:auto;overflow-y:hidden;scrollbar-width:none;height:56px;touch-action:pan-x;-webkit-overflow-scrolling:touch;
-    -webkit-mask-image:linear-gradient(90deg,transparent,#000 22%,#000 78%,transparent);mask-image:linear-gradient(90deg,transparent,#000 22%,#000 78%,transparent)}
-  .rtrack{height:100%;background-image:linear-gradient(90deg,rgba(255,255,255,.95) 0 2px,transparent 2px),linear-gradient(90deg,rgba(255,255,255,.45) 0 1px,transparent 1px);
-    background-size:90px 24px,10px 14px;background-position:var(--off,50%) 20px,var(--off,50%) 25px;background-repeat:repeat-x}
-  .needle{position:absolute;left:50%;top:8px;width:3px;height:44px;margin-left:-1.5px;border-radius:2px;background:#fff;box-shadow:0 0 14px rgba(255,255,255,.9),0 0 0 1px rgba(0,0,0,.2);pointer-events:none}
-  .looks{display:flex;gap:12px;overflow-x:auto;scrollbar-width:none;padding:6px 4px 14px;scroll-snap-type:x proximity}
-  .look{flex:none;display:flex;flex-direction:column;align-items:center;gap:7px;scroll-snap-align:center;color:rgba(255,255,255,.8);font-size:12px;font-weight:500;text-shadow:0 1px 3px rgba(0,0,0,.5);transition:transform .5s var(--spring)}
-  .look canvas{width:68px;height:68px;border-radius:22px;border:1px solid rgba(255,255,255,.4);box-shadow:0 6px 16px rgba(0,0,0,.3);transition:box-shadow .4s var(--out),border-color .3s var(--out)}
-  .look.sel{transform:translateY(-3px)}
-  .look.sel canvas{border:2px solid #fff;box-shadow:0 0 0 3px rgba(255,255,255,.25),0 12px 24px rgba(0,0,0,.4)}
-  .look.sel span{color:#fff;font-weight:600}
-  .feats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .feat{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:14px 16px;border-radius:26px;text-align:left;color:#fff;background:var(--glass);border:1px solid var(--rim);box-shadow:var(--lift);text-shadow:0 1px 3px rgba(0,0,0,.5);transition:transform .14s var(--inout),background .4s var(--out),color .3s var(--out)}
-  .feat svg{width:28px;height:28px;margin-bottom:6px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;transition:transform .7s var(--spring)}
-  .feat b{font-size:14px;font-weight:600}.feat small{font-size:12px;opacity:.75;line-height:1.3}
-  .feat.on{background:linear-gradient(180deg,#fff,#ecebe4 55%,#d6d3ca);color:#16181b;border-color:#fff;text-shadow:none;box-shadow:0 10px 24px rgba(0,0,0,.35),0 1px 0 #fff inset,0 0 22px rgba(255,255,255,.3)}
-  .feat.on small{opacity:.7}.feat.on svg{transform:scale(1.14) rotate(-6deg)}
-  .feat .fl{opacity:0;transition:opacity .4s var(--out)}.feat .wv{transition:opacity .4s var(--out)}.feat.on .fl{opacity:1}.feat.on .wv{opacity:0}
-  #smartStat{margin:12px 4px 2px;font-size:12px;color:rgba(255,255,255,.75);text-shadow:0 1px 3px rgba(0,0,0,.5)}
-  #faceBox{position:absolute;left:0;top:0;border:2px solid #fff;border-radius:18px;opacity:0;pointer-events:none;box-shadow:0 0 16px rgba(255,255,255,.4);transition:opacity .25s var(--out),border-color .3s var(--out),width .15s var(--out),height .15s var(--out)}
-  #faceBox.on{opacity:1}#faceBox.lock{border-color:var(--ice);box-shadow:0 0 18px rgba(88,174,255,.6)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:26px;background:none;margin:0}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:rgba(255,255,255,.18);box-shadow:inset 0 1px 2px rgba(0,0,0,.45)}
+input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:rgba(255,255,255,.18)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;margin-top:-8px;border-radius:50%;
+  background:radial-gradient(circle at 35% 25%,#fff,#d6d4cc);box-shadow:0 3px 8px rgba(0,0,0,.45),0 1px 0 #fff inset;
+  transition:transform .25s var(--spring)}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radius:50%;background:radial-gradient(circle at 35% 25%,#fff,#d6d4cc)}
+input[type=range]:active::-webkit-slider-thumb{transform:scale(1.2)}
 
-  /* dock: scrolls if crowded, centred if not */
-  #dock{overflow-x:auto;scrollbar-width:none;justify-content:flex-start;padding:2px 12px}
-  #dock::-webkit-scrollbar{display:none}
-  #dock>.chip{flex:none}#dock>:first-child{margin-left:auto}#dock>:last-child{margin-right:auto}
-  #dock .chip{padding:0 15px;font-size:12px;gap:6px}
+.meter{display:flex;gap:2px;height:20px;align-items:flex-end;margin-top:6px}
+.meter i{flex:1;background:linear-gradient(to top,#3ddc84,#ffd60a 70%,#ff453a);height:2px;border-radius:2px;transition:height .05s linear;opacity:.85}
 
-  /* animated icons */
-  #bLook svg circle,#bGrade svg circle{transition:transform .6s var(--spring)}
-  #bLook.act svg circle:nth-child(1){transform:translateX(-2.5px)}#bLook.act svg circle:nth-child(2){transform:translateX(2.5px)}
-  #bGrade.act svg circle:nth-of-type(1){transform:translateX(-8px)}#bGrade.act svg circle:nth-of-type(2){transform:translateX(8px)}
-  #bPro svg,#bCar svg,#bSmart svg{transition:transform .7s var(--spring)}
-  #bPro.act svg{transform:rotate(135deg)}#bCar.act svg{transform:rotate(120deg) scale(1.08)}#bSmart.act svg{transform:scale(1.14) rotate(-6deg)}
-  #bFlash svg path{transition:fill .3s var(--out),filter .4s var(--out)}
-  #bFlash.act svg path{fill:currentColor;filter:drop-shadow(0 0 6px rgba(255,190,60,.9))}
-  #bFlash.jump svg{animation:zap .55s}
-  @keyframes zap{0%{transform:scale(1)}20%{transform:scale(1.3) rotate(-12deg)}40%{transform:scale(.9) rotate(8deg)}60%{transform:scale(1.15) rotate(-4deg)}100%{transform:none}}
-  #bGrid.jump svg path{stroke-dasharray:70;animation:draw .7s cubic-bezier(.22,1,.36,1)}
-  @keyframes draw{from{stroke-dashoffset:70}to{stroke-dashoffset:0}}
-  #bFlip.jump svg{animation:spin .8s cubic-bezier(.34,1.3,.64,1)}
-  @keyframes spin{to{transform:rotate(180deg)}}
-  #bRes.jump{animation:resflip .6s both}
-  @keyframes resflip{0%{transform:perspective(200px) rotateX(80deg);opacity:.2;animation-timing-function:cubic-bezier(.34,1.5,.64,1)}100%{transform:none;opacity:1}}
+#viewer{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  padding:calc(20px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom));
+  background:rgba(6,7,9,.7);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);
+  opacity:0;visibility:hidden;transition:opacity .3s var(--out),visibility 0s .3s}
+#viewer.on{opacity:1;visibility:visible;transition:opacity .3s var(--out),visibility 0s}
+#viewer .vwrap{flex:1;min-height:0;width:100%;display:grid;place-items:center}
+#viewer .vwrap img,#viewer .vwrap video{max-width:100%;max-height:100%;border-radius:24px;
+  box-shadow:0 20px 50px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.25)}
+#viewer .vbar{display:flex;gap:10px}
+#viewer .btn{padding:11px 20px;border-radius:999px;font-size:14px;font-weight:600;
+  background:var(--glass);border:1px solid var(--rim);box-shadow:var(--lift);color:#fff;
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);text-shadow:0 1px 3px rgba(0,0,0,.5)}
 
-  /* shutter: progress ring + morphing core */
-  #shutter::after,#ui.vid #shutter::after,#shutter.rec::after{content:none!important}
-  #shutter{position:relative;width:88px;height:88px;border:0;background:none;box-shadow:none;border-radius:50%;display:grid;place-items:center;-webkit-backdrop-filter:none;backdrop-filter:none}
-  #shutter::before{content:"";position:absolute;inset:0;border-radius:50%;--c:#fff;
-    background:conic-gradient(var(--c) calc(var(--pp)*1%),rgba(255,255,255,.6) 0);
-    -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));
-    filter:drop-shadow(0 4px 10px rgba(0,0,0,.35));transition:--pp .5s linear}
-  #shutter.rec::before{--c:var(--rec)}
-  #shutter.cd::before{--c:#fff;animation:cdfill var(--dur,3s) cubic-bezier(.45,0,.2,1) both}
-  @keyframes cdfill{from{--pp:0}to{--pp:100}}
-  #shutter .core{width:70px;height:70px;border-radius:50%;background:radial-gradient(120% 120% at 32% 18%,#fff 0%,#f3f2ed 42%,#cdcbc2 100%);
-    box-shadow:0 4px 12px rgba(0,0,0,.4),0 1px 0 #fff inset,0 -3px 6px rgba(0,0,0,.12) inset;
-    transition:width .55s var(--spring),height .55s var(--spring),border-radius .55s var(--spring),background .4s var(--out),transform .2s var(--inout)}
-  #shutter:active .core{transform:scale(.9)}
-  #ui.vid #shutter .core{background:radial-gradient(120% 120% at 32% 18%,#ff9d93 0%,#ff453a 45%,#b91d15 100%);box-shadow:0 4px 14px rgba(255,69,58,.5),0 1px 0 rgba(255,255,255,.55) inset,0 -3px 6px rgba(0,0,0,.2) inset}
-  #shutter.rec .core{width:34px;height:34px;border-radius:11px;animation:breathe 1.8s ease-in-out infinite}
-  @keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(.86)}}
-  #shutter .rip{position:absolute;inset:8px;border-radius:50%;border:2px solid #fff;opacity:0;pointer-events:none}
-  #shutter.snap .rip{animation:ripple .6s cubic-bezier(.2,.8,.2,1)}
-  @keyframes ripple{0%{opacity:.9;transform:scale(.8)}100%{opacity:0;transform:scale(1.55)}}
+#err{position:absolute;top:calc(60px + env(safe-area-inset-top));left:12px;right:12px;
+  background:var(--glass),rgba(8,10,14,.3);border:1px solid rgba(255,69,58,.7);border-radius:24px;
+  padding:12px;display:none;z-index:9;max-height:40vh;overflow:auto;box-shadow:var(--lift)}
+#err.on{display:block}
+#err pre{margin:0 0 8px;font:12px/1.4 ui-monospace,monospace;white-space:pre-wrap;word-break:break-word;user-select:text}
 
-  /* mode switch: sliding glass pill */
-  #modes{left:50%;right:auto;transform:translateX(-50%);gap:0;padding:4px;border-radius:999px;background:var(--glass);border:1px solid var(--rim);box-shadow:var(--lift);-webkit-backdrop-filter:blur(10px) saturate(1.6);backdrop-filter:blur(10px) saturate(1.6)}
-  #modes::before{content:"";position:absolute;left:4px;top:4px;bottom:4px;width:92px;border-radius:999px;background:linear-gradient(180deg,#fff,#e9e7e0 55%,#d6d3ca);box-shadow:0 4px 12px rgba(0,0,0,.3),0 1px 0 #fff inset;transform:translateX(calc(var(--i,0)*100%));transition:transform .55s var(--spring)}
-  #modes button,#modes button.sel{position:relative;width:92px;padding:8px 0;background:none;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;color:rgba(255,255,255,.85);transition:color .3s var(--out)}
-  #modes button.sel{color:#16181b;text-shadow:none}
+/* parameter panel — ruler UI */
+.pchips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 12px;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)}
+.pchips::-webkit-scrollbar{display:none}
+.pchips button{flex:none;display:flex;gap:8px;align-items:baseline;padding:8px 14px;border-radius:999px;
+  font-size:13px;font-weight:600;color:#fff;background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.22);text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.pchips button i{font-style:normal;font-size:11px;font-weight:500;opacity:.6}
+.pchips button.mod i{opacity:1;color:var(--ice)}
+.pchips button.sel{background:linear-gradient(180deg,#fff,#e8e6df);color:#16181b;border-color:#fff;
+  text-shadow:none;box-shadow:0 6px 16px rgba(0,0,0,.3),0 0 16px rgba(255,255,255,.25)}
+.pchips button.sel i{color:#555;opacity:1}
+
+.pread{display:flex;align-items:baseline;justify-content:center;gap:10px;padding:2px 0 6px}
+.pread b{font-size:38px;font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums;
+  text-shadow:0 2px 10px rgba(0,0,0,.45)}
+.pread small{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.7)}
+
+.pp.empty{display:none}
+.rwrap{position:relative}
+.ruler{overflow-x:auto;overflow-y:hidden;scrollbar-width:none;height:56px;touch-action:pan-x;
+  -webkit-overflow-scrolling:touch;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 22%,#000 78%,transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 22%,#000 78%,transparent)}
+.ruler::-webkit-scrollbar{display:none}
+.rtrack{height:100%;
+  background-image:linear-gradient(90deg,rgba(255,255,255,.95) 0 2px,transparent 2px),
+                   linear-gradient(90deg,rgba(255,255,255,.45) 0 1px,transparent 1px);
+  background-size:90px 24px,10px 14px;
+  background-position:var(--off,50%) 20px,var(--off,50%) 25px;
+  background-repeat:repeat-x}
+.needle{position:absolute;left:50%;top:8px;width:3px;height:44px;margin-left:-1.5px;border-radius:2px;
+  background:#fff;box-shadow:0 0 14px rgba(255,255,255,.9),0 0 0 1px rgba(0,0,0,.2);pointer-events:none}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 </style>
 </head>
 <body>
 <video id="pv" playsinline muted autoplay></video>
-<div id="landing">
-  <h1>Car AR</h1>
-  <p>Point at the road and tap to park the car. Walk around it, then shoot photos or video with color grading.</p>
-  <button id="start" disabled>Loading car…</button>
-  <button id="alt" class="alt" hidden>Open phone AR viewer</button>
-  <div id="msg"></div>
-</div>
-
-<div id="fallback">
-  <model-viewer src="./car.glb" ar ar-modes="webxr scene-viewer quick-look" ar-scale="fixed" ar-placement="floor"
-    camera-controls touch-action="pan-y" shadow-intensity="1.2" shadow-softness="0.8" exposure="1" environment-image="neutral" alt="Car">
-    <button slot="ar-button" id="arBtn">View in your space</button>
-  </model-viewer>
-  <p>Tap “View in your space” and point at the road. Lighting, shadow and photo capture come from your phone’s built-in AR viewer.</p>
-</div>
+<canvas id="gl"></canvas>
+<canvas id="guides"></canvas>
+<canvas id="hist" width="192" height="84"></canvas>
+<div id="count"></div>
+<div id="shot"></div>
+<div id="focusRing"></div>
 
 <div id="ui">
-  <div id="grid" class="camonly"><b></b><b></b><b></b><b></b></div>
-  <div id="level" class="camonly"></div>
-  <div id="faceBox"></div>
-  <div id="focusRing"></div>
-  <div id="count"></div>
-  <div id="shot"></div>
-  <div id="viewer" class="hit">
-    <div class="vwrap"></div>
-    <div class="vbar"><button class="btn" id="vShare">Share</button><button class="btn" id="vSave">Save</button><button class="btn" id="vClose">Close</button></div>
-  </div>
-  <div id="err" class="hit"><pre></pre><button class="btn" id="errCopy" style="background:var(--surface2);padding:8px 14px;border-radius:12px">Copy</button> <button class="btn" id="errX" style="background:var(--surface2);padding:8px 14px;border-radius:12px">Dismiss</button></div>
   <div id="top">
-    <div class="grp camonly">
+    <div class="grp">
       <button class="tbtn hit" id="bFlash" aria-label="Flash"><svg viewBox="0 0 24 24"><path d="M13 3L5 14h6l-1 7 8-11h-6l1-7z"/></svg></button>
-      <button class="tbtn hit" id="bTimer" aria-label="Timer"><svg viewBox="0 0 24 24" class="clk"><circle class="ring" cx="12" cy="13" r="7.4"/><circle class="arc" cx="12" cy="13" r="7.4" pathLength="100"/><path d="M10 3h4"/><g class="hand"><path d="M12 13V8.4"/></g><circle cx="12" cy="13" r="1" fill="currentColor" stroke="none"/></svg><b>Off</b></button>
+      <button class="tbtn hit" id="bTimer" aria-label="Timer"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="7.4"/><path d="M10 3h4"/><path d="M12 13V8.4"/></svg><b class="lbl">Off</b></button>
       <button class="tbtn hit" id="bGrid" aria-label="Grid"><svg viewBox="0 0 24 24"><path d="M9 4v16M15 4v16M4 9h16M4 15h16"/></svg></button>
       <button class="tbtn hit" id="bRes" aria-label="Resolution">FHD</button>
+      <button class="tbtn hit" id="bFalse" aria-label="False color">FC</button>
     </div>
-    <label class="sw hit"><span>AR</span><input type="checkbox" id="arSw"><i></i></label>
   </div>
-  <canvas id="hist" class="camonly" width="84" height="36"></canvas>
-  <div id="hint" class="off">Move your phone to find the ground</div>
+
+  <div id="hint">Starting camera…</div>
   <div id="timer">0:00</div>
-  <div class="panel hit" id="pLook">
-    <div class="looks" id="looks"></div>
-    <div id="ppLook"></div>
-    <div class="presets"><button class="btn" id="impLut">Import .cube LUT</button></div><input type="file" id="lutFile" accept=".cube" hidden>
+
+  <div id="rail">
+    <button class="zoom hit" data-z="1">1×</button>
+    <button class="zoom hit" data-z="2">2×</button>
+    <button class="zoom hit" data-z="5">5×</button>
   </div>
-  <div class="panel hit" id="pGrade">
-    <div id="ppGrade"></div>
-    <div class="presets" id="presets" hidden></div>
-    <div class="presets"><button class="btn" id="flip">Flip feed</button><button class="btn" id="resetGrade">Reset all</button></div>
-  </div>
-  <div class="panel hit" id="pPro">
-    <div id="ppPro"></div>
-    <p class="note" id="proNote" hidden>This browser doesn’t expose manual camera controls. Look and Adjust still give you EV, white balance and color. Manual ISO, shutter, focus and white balance work in Chrome on Android.</p>
+
+  <div class="panel hit" id="pLook"></div>
+  <div class="panel hit" id="pAdjust"></div>
+  <div class="panel hit" id="pPro"></div>
+  <div class="panel hit" id="pAudio">
+    <i class="grab"></i>
+    <div class="row"><label>Mic</label><select id="micSel"></select></div>
+    <div class="row"><label>Gain</label><input type="range" id="audioGain" min="0" max="2" step="0.05" value="1"><output>1.00×</output></div>
+    <div class="row"><label>Burst</label><input type="range" id="burst" min="4" max="20" step="1" value="12"><output>12</output></div>
     <div class="presets">
-      <button class="btn" id="aAuto">Auto</button><button class="btn" id="aPeak">Peaking</button><button class="btn" id="aZebra">Zebra</button><button class="btn sel" id="aHist">Histogram</button>
+      <button class="btn sel" id="aWnd">Wind filter</button>
+      <button class="btn sel" id="aLim">Limiter</button>
+      <button class="btn" id="aZebra">Zebra</button>
     </div>
+    <div class="meter" id="audioMeter"></div>
   </div>
-  <div class="panel hit" id="pSmart">
-    <div class="feats">
-      <button class="feat" data-k="face"><svg viewBox="0 0 24 24"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="11" r="2.4"/><path d="M8 17c.9-1.8 2.3-2.6 4-2.6s3.1.8 4 2.6"/></svg><b>Face Lock</b><small>Follows faces like a gimbal</small></button>
-      <button class="feat" data-k="focus"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3.5M12 17.5V21M3 12h3.5M17.5 12H21"/></svg><b>Face Focus</b><small>Focus and exposure on faces</small></button>
-      <button class="feat" data-k="stab"><svg viewBox="0 0 24 24"><path class="wv" d="M3 12c2.5-6 5.5-6 9 0s6.5 6 9 0"/><path class="fl" d="M3 12h18"/></svg><b>Stabilizer</b><small>Smooths out hand shake</small></button>
-      <button class="feat" data-k="lock"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="3"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><b>AE/AF Lock</b><small>Freeze focus and exposure</small></button>
-    </div>
-    <div id="smartStat">Everything is automatic. Turn features on as you need them.</div>
-  </div>
-  <div class="panel hit" id="pCar">
-    <div id="ppCar"></div>
-    <div class="presets"><button class="btn" id="replace">Re-place car</button></div>
-    <div hidden>
-      <input type="range" id="rot" min="-180" max="180" value="0"><output></output>
-      <input type="range" id="scl" min="0.3" max="2" step="0.01" value="1"><output></output>
-      <div id="rowDist" hidden><input type="range" id="dist" min="0.5" max="2" step="0.01" value="1"><output></output></div>
-    </div>
-  </div>
+
   <div id="dock">
     <button class="chip hit" id="bLook"><svg viewBox="0 0 24 24"><circle cx="9" cy="12" r="5"/><circle cx="15" cy="12" r="5"/></svg>Look</button>
-    <button class="chip hit" id="bGrade"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>Adjust</button>
-    <button class="chip hit proonly" id="bPro"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v3M12 17v3M4 12h3M17 12h3M12 12l3-3"/></svg>Pro</button>
-    <button class="chip hit camonly" id="bSmart"><svg viewBox="0 0 24 24"><rect x="4.5" y="4.5" width="15" height="15" rx="5"/><path d="M9.5 10v1.2M14.5 10v1.2M9 14.6c1.7 1.4 4.3 1.4 6 0"/></svg>Smart</button>
-    <button class="chip hit aronly" id="bCar"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3zM12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>Model</button>
+    <button class="chip hit" id="bAdjust"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>Adjust</button>
+    <button class="chip hit" id="bPro"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v3M12 17v3M4 12h3M17 12h3"/></svg>Pro</button>
+    <button class="chip hit" id="bAudio"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Audio</button>
   </div>
-  <div id="modes"><button class="hit sel" data-m="photo">Photo</button><button class="hit" data-m="video">Video</button></div>
+
+  <div id="modes" style="--i:0">
+    <button class="hit sel" data-m="photo">Photo</button>
+    <button class="hit" data-m="video">Video</button>
+    <button class="hit" data-m="ultra">Ultra 4K</button>
+    <button class="hit" data-m="night">Night</button>
+  </div>
+
   <div id="bar">
-    <button id="thumb" class="hit" aria-label="Gallery"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17l4.5-4.5 3.5 3.5 3-3 5 5"/></svg></button>
+    <button class="hit" id="thumb" aria-label="Gallery"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17l4.5-4.5 3.5 3.5 3-3 5 5"/></svg></button>
     <button class="hit" id="shutter" aria-label="Shutter"><span class="core"></span><i class="rip"></i></button>
-    <button class="chip hit camonly" id="bFlip" aria-label="Switch camera"><svg viewBox="0 0 24 24"><path d="M20 7v4h-4M4 17v-4h4M6.5 9A7 7 0 0 1 19 11M17.5 15A7 7 0 0 1 5 13"/></svg></button>
-    <button id="rec" hidden></button>
+    <button class="hit" id="bFlip" aria-label="Switch camera"><svg viewBox="0 0 24 24"><path d="M20 7v4h-4M4 17v-4h4M6.5 9A7 7 0 0 1 19 11M17.5 15A7 7 0 0 1 5 13"/></svg></button>
+  </div>
+
+  <div id="err"><pre></pre></div>
+</div>
+
+<div id="viewer">
+  <div class="vwrap"></div>
+  <div class="vbar">
+    <button class="btn" id="vShare">Share</button>
+    <button class="btn" id="vSave">Save</button>
+    <button class="btn" id="vClose">Close</button>
   </div>
 </div>
 
-<script type="importmap">
-{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
-</script>
 <script type="module">
-import * as THREE from 'three';
-import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
-import {DRACOLoader} from 'three/addons/loaders/DRACOLoader.js';
-import {MeshoptDecoder} from 'three/addons/libs/meshopt_decoder.module.js';
-import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
-import {XREstimatedLight} from 'three/addons/webxr/XREstimatedLight.js';
+/* ============================================================
+   CAM PRO — camera app
+   ============================================================ */
+const $ = s => document.querySelector(s);
+const video = $('#pv');
+const glCanvas = $('#gl');
+const guides = $('#guides');
+const gctx = guides.getContext('2d');
+const histCv = $('#hist');
+const hctx = histCv.getContext('2d');
+const hint = $('#hint');
+const timerEl = $('#timer');
+const errEl = $('#err');
+const shutter = $('#shutter');
+const thumb = $('#thumb');
+const viewer = $('#viewer');
 
-const $ = id => document.getElementById(id);
-const CAR_LENGTH_M = 4.5;           // used only when the model's native size is not car-like (2.5-7 m)
-const REC_LONG_SIDE = 1280, PHOTO_LONG_SIDE = 1920;
-
-/* ---------- renderer & scene ---------- */
-const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
-renderer.setPixelRatio(1);
-renderer.setSize(innerWidth, innerHeight);
-renderer.autoClear = false;
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.xr.enabled = true;
-renderer.xr.setReferenceSpaceType('local');
-document.body.appendChild(renderer.domElement);
-renderer.domElement.style.display = 'none';
-
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera();            // mirrors the XR view for offscreen passes
-camera.matrixAutoUpdate = false; camera.matrixWorldAutoUpdate = false;
-
-const hemi = new THREE.HemisphereLight(0xffffff, 0x666666, 1.0);
-const sun = new THREE.DirectionalLight(0xffffff, 2.0);
-sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
-const sc = sun.shadow.camera; sc.left = sc.bottom = -6; sc.right = sc.top = 6; sc.near = .5; sc.far = 30;
-sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.03; sun.shadow.radius = 4;
-scene.add(hemi, sun, sun.target);
-
-const stage = new THREE.Group();            // anchored to the ground spot
-stage.visible = false;
-scene.add(stage);
-const yaw = new THREE.Group(); stage.add(yaw);
-const shadowPlane = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.ShadowMaterial({opacity:.5}));
-shadowPlane.rotation.x = -Math.PI/2; shadowPlane.receiveShadow = true;
-stage.add(shadowPlane);
-
-/* ---------- model ---------- */
-// Fetch with a plain URL string (not a Request object) so it also works behind sandboxed/proxied fetch shims.
-async function loadGlb(url, loader, onLoad, onProgress, onError){
-  try {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const total = +res.headers.get('content-length') || 0;
-    let buf;
-    if (res.body && res.body.getReader){
-      const reader = res.body.getReader(), parts = []; let got = 0;
-      for (;;){ const {done, value} = await reader.read(); if (done) break; parts.push(value); got += value.length; onProgress({loaded:got, total}); }
-      const u8 = new Uint8Array(got); let o = 0; for (const q of parts){ u8.set(q, o); o += q.length; }
-      buf = u8.buffer;
-    } else buf = await res.arrayBuffer();
-    loader.parse(buf, './', onLoad, onError);
-  } catch (e) { onError(e); }
-}
-let modelReady = false, xrOK = false, xrBlocked = false;
-let resolveModel, rejectModel, modelStarted = false;
-const modelP = new Promise((res, rej) => { resolveModel = res; rejectModel = rej; }); modelP.catch(() => {});
-function loadModel(){
-  if (modelStarted) return modelP; modelStarted = true;
-  const draco = new DRACOLoader().setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
-  const loader = new GLTFLoader().setDRACOLoader(draco).setMeshoptDecoder(MeshoptDecoder);
-  loadGlb('./car.glb', loader, gltf => {
-    const m = gltf.scene;
-    m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = false; } });
-    const box = new THREE.Box3().setFromObject(m), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
-    const len = Math.max(size.x, size.z);
-    // glTF units are metres: keep the model's own size if it looks like a real car, otherwise normalise
-    const k = (len >= 2.5 && len <= 7) ? 1 : CAR_LENGTH_M / len;
-    m.scale.setScalar(k);
-    m.position.set(-c.x*k, -box.min.y*k, -c.z*k);   // centred, wheels on the ground
-    yaw.add(m);
-    modelReady = true; resolveModel();
-    if (xrOK){ $('start').disabled = false; $('start').textContent = 'Start AR'; }
-  }, e => { if (e.total && !xrBlocked) $('start').textContent = `Loading car… ${Math.min(100, Math.round(e.loaded/e.total*100))}%`; },
-  err => { $('msg').textContent = 'Could not load car.glb — it must sit next to index.html in the repo root.'; rejectModel(new Error('car.glb not found next to index.html')); console.error(err); });
-  return modelP;
-}
-
-/* ---------- camera feed + grading pipeline ---------- */
-const camTex = new THREE.Texture();                       // wraps the XR camera image
-const bgMat = new THREE.ShaderMaterial({
-  uniforms:{tCam:{value:camTex}, uFlip:{value:0}, uCrop:{value:new THREE.Vector2(1,1)}},
-  vertexShader:`varying vec2 v; void main(){ v = position.xy*.5+.5; gl_Position = vec4(position.xy,1.,1.); }`,
-  fragmentShader:`uniform sampler2D tCam; uniform float uFlip; uniform vec2 uCrop; varying vec2 v;
-    void main(){ vec2 w = (v-.5)*uCrop+.5; vec2 u = vec2(w.x, mix(w.y, 1.-w.y, uFlip)); vec3 c = texture2D(tCam,u).rgb;
-      gl_FragColor = vec4(pow(c, vec3(2.2)), 1.); }`,
-  depthTest:false, depthWrite:false });
-const bg = new THREE.Mesh(new THREE.PlaneGeometry(2,2), bgMat);
-bg.frustumCulled = false; bg.renderOrder = -1000;
-scene.add(bg);
-
+/* ---------- state ---------- */
+const state = {
+  mode: 'photo',
+  facing: 'environment',
+  resIdx: 1,
+  timerSec: 0,
+  torch: false,
+  grid: false,
+  falseColor: false,
+  zebra: false,
+  hist: false,
+  zoom: 1,
+  gain: 1,
+  wind: true,
+  limiter: true,
+  burst: 12,
+  micId: ''
+};
 const G = {exposure:0, contrast:1, saturation:1, temp:0, tint:0, highlights:0, shadows:0, vignette:0};
-const gradeMat = new THREE.ShaderMaterial({
-  uniforms:{tScene:{value:null}, uSrgb:{value:0}, tLut:{value:null}, uLut:{value:0}, uLutSize:{value:17}, uAssist:{value:0}, uPeak:{value:0}, uZebra:{value:0}, uTexel:{value:new THREE.Vector2(1/1280,1/720)}, uSrc:{value:new THREE.Vector3(1,1,0)}, uPan:{value:new THREE.Vector2()}, g1:{value:new THREE.Vector4()}, g2:{value:new THREE.Vector4()}},
-  vertexShader:`varying vec2 v; void main(){ v = position.xy*.5+.5; gl_Position = vec4(position.xy,0.,1.); }`,
-  fragmentShader:`uniform sampler2D tScene; uniform sampler2D tLut; uniform float uSrgb, uLut, uLutSize, uAssist, uPeak, uZebra; uniform vec2 uTexel; uniform vec3 uSrc; uniform vec2 uPan; uniform vec4 g1; uniform vec4 g2; varying vec2 v;
-    // g1 = exposure, contrast, saturation, temp   g2 = tint, highlights, shadows, vignette
-    vec3 lut3(vec3 c){ float n = uLutSize; c = clamp(c,0.,1.)*(n-1.);
-      float b0 = floor(c.b), b1 = min(b0+1., n-1.);
-      vec2 u0 = vec2((b0*n+c.r+.5)/(n*n), (c.g+.5)/n), u1 = vec2((b1*n+c.r+.5)/(n*n), (c.g+.5)/n);
-      return mix(texture2D(tLut,u0).rgb, texture2D(tLut,u1).rgb, fract(c.b)); }
-    vec2 sv(vec2 p){ vec2 w = (p-.5)*uSrc.xy+.5+uPan; return vec2(w.x, mix(w.y, 1.-w.y, uSrc.z)); }
-    float lm(vec2 p){ return dot(pow(texture2D(tScene,sv(p)).rgb, vec3(1./2.2)), vec3(.2126,.7152,.0722)); }
-    vec3 soft(vec3 x){ vec3 o = max(x-.8,0.); return min(x,.8) + .2*tanh(o/.2); }
-    void main(){
-      vec3 c = texture2D(tScene,sv(v)).rgb; c = mix(c, pow(c, vec3(2.2)), uSrgb); c *= exp2(g1.x);
-      c *= vec3(1.+g1.w*.18, 1.-g2.x*.12, 1.-g1.w*.18);
-      c = pow(soft(max(c,0.)), vec3(1./2.2));
-      float l = dot(c, vec3(.2126,.7152,.0722));
-      c += g2.z*.18*(1.-smoothstep(0.,.55,l)) + g2.y*.18*smoothstep(.45,1.,l);
-      c = (c-.5)*g1.y + .5;
-      l = dot(c, vec3(.2126,.7152,.0722));
-      c = mix(vec3(l), c, g1.z);
-      c = mix(c, lut3(c), uLut);
-      c *= 1. - g2.w*smoothstep(.35,1.,length(v-.5)*1.5);
-      if (uAssist > .5){
-        if (uPeak > .5){ float e = abs(lm(v+vec2(uTexel.x,0.))-lm(v-vec2(uTexel.x,0.))) + abs(lm(v+vec2(0.,uTexel.y))-lm(v-vec2(0.,uTexel.y))); if (e > .09) c = vec3(.35,1.,.3); }
-        if (uZebra > .5 && dot(c,vec3(.2126,.7152,.0722)) > .94) c = mix(c, vec3(1.), .55*step(.5, fract((gl_FragCoord.x+gl_FragCoord.y)*.03)));
-      }
-      gl_FragColor = vec4(clamp(c,0.,1.),1.);
-    }`,
-  depthTest:false, depthWrite:false });
-const quadScene = new THREE.Scene();
-const quad = new THREE.Mesh(new THREE.PlaneGeometry(2,2), gradeMat);
-quad.frustumCulled = false; quadScene.add(quad);
-const quadCam = new THREE.Camera();
-
-const reticleScene = new THREE.Scene();
-const reticle = new THREE.Mesh(new THREE.RingGeometry(.14,.18,40).rotateX(-Math.PI/2),
-  new THREE.MeshBasicMaterial({color:0xffffff, depthTest:false}));
-reticle.matrixAutoUpdate = false; reticle.visible = false; reticleScene.add(reticle);
-
-const rtOpts = {format:THREE.RGBAFormat, type:THREE.HalfFloatType, colorSpace:THREE.LinearSRGBColorSpace, samples:4, depthBuffer:true};
-let rtScene = new THREE.WebGLRenderTarget(16,16,rtOpts);
-const outRT = new THREE.WebGLRenderTarget(16,16,{format:THREE.RGBAFormat, type:THREE.UnsignedByteType, depthBuffer:false});
-const outCanvas = document.createElement('canvas'), outCtx = outCanvas.getContext('2d');
-let pix = new Uint8Array(4), img = null, rtW = 0, rtH = 0;
-
-function sizeTargets(vw, vh, longSide){
-  const s = Math.min(1, longSide / Math.max(vw, vh));
-  const w = Math.max(2, Math.round(vw*s)), h = Math.max(2, Math.round(vh*s));
-  if (w === rtW && h === rtH) return;
-  rtW = w; rtH = h;
-  rtScene.setSize(w,h); outRT.setSize(w,h);
-  outCanvas.width = w; outCanvas.height = h;
-  pix = new Uint8Array(w*h*4); img = outCtx.createImageData(w,h);
-}
-function readOut(){
-  renderer.readRenderTargetPixels(outRT,0,0,rtW,rtH,pix);
-  const row = rtW*4, d = img.data;
-  for (let y=0; y<rtH; y++) d.set(pix.subarray((rtH-1-y)*row,(rtH-y)*row), y*row);
-  outCtx.putImageData(img,0,0);
-}
-function applyGrade(){
-  gradeMat.uniforms.uSrc.value.set(1,1,0); gradeMat.uniforms.uPan.value.set(0,0);
-  gradeMat.uniforms.g1.value.set(G.exposure, G.contrast, G.saturation, G.temp);
-  gradeMat.uniforms.g2.value.set(G.tint, G.highlights, G.shadows, G.vignette);
-}
-
-/* ---------- light estimation ---------- */
-const xrLight = new XREstimatedLight(renderer, true);
-let estimating = false;
-xrLight.addEventListener('estimationstart', () => {
-  estimating = true; scene.add(xrLight);
-  xrLight.directionalLight.visible = false;       // we use our own shadow-casting sun with its values
-  hemi.visible = false;
-  if (xrLight.environment) scene.environment = xrLight.environment;
-});
-xrLight.addEventListener('estimationend', () => {
-  estimating = false; scene.remove(xrLight); scene.environment = null; hemi.visible = true;
-});
-function updateSun(){
-  const dir = new THREE.Vector3(.35,1,.25).normalize();
-  if (estimating){
-    dir.copy(xrLight.directionalLight.position).normalize();
-    if (dir.y < .2){ dir.y = .2; dir.normalize(); }     // keep the sun above the horizon
-    sun.color.copy(xrLight.directionalLight.color);
-    sun.intensity = xrLight.directionalLight.intensity;
-  }
-  sun.target.position.copy(stage.position);
-  sun.position.copy(stage.position).addScaledVector(dir, 10);
-}
-
-/* ---------- AR session ---------- */
-let session = null, hitSource = null, glBinding = null, refSpace = null;
-let placed = false, lastHit = null, anchor = null, hasCam = false;
-let wantPhoto = false, recording = false, recorder = null, chunks = [], recStart = 0;
-const tmpM = new THREE.Matrix4();
-
-async function startAR(){
-  session = await navigator.xr.requestSession('immersive-ar', {
-    requiredFeatures:['hit-test'],
-    optionalFeatures:['dom-overlay','light-estimation','camera-access','anchors'],
-    domOverlay:{root:$('ui')} });
-  await renderer.xr.setSession(session);
-  const gl = renderer.getContext();
-  glBinding = ('XRWebGLBinding' in window) ? new XRWebGLBinding(session, gl) : null;
-  refSpace = renderer.xr.getReferenceSpace();
-  const viewer = await session.requestReferenceSpace('viewer');
-  hitSource = await session.requestHitTestSource({space:viewer});
-  lite = false; bgMat.uniforms.tCam.value = camTex; bgMat.uniforms.uCrop.value.set(1,1);
-  placed = false; stage.visible = false; anchor = null; hasCam = false;
-  renderer.domElement.style.display = 'none'; renderer.setPixelRatio(1);
-  $('landing').style.display = 'none'; $('ui').classList.add('on');
-  $('hint').textContent = 'Move your phone to find the ground'; $('hint').classList.remove('off');
-  session.addEventListener('select', onSelect);
-  session.addEventListener('end', onEnd);
-}
-function onEnd(){
-  if (recording) stopRec();
-  session = null; hitSource = null; anchor = null;
-  $('arSw').checked = false; $('ui').classList.remove('ar','arx'); $('rowDist').hidden = true; startCam();
-}
-function onSelect(){
-  if (placed || !lastHit) return;
-  const pose = lastHit.getPose(refSpace); if (!pose) return;
-  tmpM.fromArray(pose.transform.matrix);
-  stage.position.setFromMatrixPosition(tmpM);
-  stage.visible = true; placed = true; reticle.visible = false;
-  $('hint').classList.add('off');
-  if (lastHit.createAnchor) lastHit.createAnchor().then(a => anchor = a).catch(() => {});
-}
-
-renderer.setAnimationLoop((t, frame) => {
-  if (lite){ liteFrame(); return; }
-  if (!frame || !session) return;
-  const xrRT = renderer.getRenderTarget();
-
-  // hit test / reticle
-  if (!placed && hitSource){
-    const r = frame.getHitTestResults(hitSource);
-    if (r.length){
-      lastHit = r[0]; const p = lastHit.getPose(refSpace);
-      if (p){ reticle.visible = true; reticle.matrix.fromArray(p.transform.matrix); $('hint').textContent = 'Tap to park the car here'; }
-    } else { reticle.visible = false; lastHit = null; }
-  }
-  if (placed && anchor && frame.trackedAnchors && frame.trackedAnchors.has(anchor)){
-    const p = frame.getPose(anchor.anchorSpace, refSpace);
-    if (p) stage.position.set(p.transform.position.x, p.transform.position.y, p.transform.position.z);
-  }
-  updateSun();
-
-  // camera image
-  const pose = frame.getViewerPose(refSpace);
-  const view = pose && pose.views[0];
-  let tex = null;
-  if (view && view.camera && glBinding && glBinding.getCameraImage){
-    try { tex = glBinding.getCameraImage(view.camera); } catch(e){}
-  }
-
-  if (!tex){
-    // Fallback: no camera access -> browser shows the camera; we only draw the car + shadow (no grading/capture).
-    if (hasCam !== false || !$('bar').dataset.nocam){ hasCam = false; $('bar').dataset.nocam = 1; $('shutter').style.opacity = $('rec').style.opacity = .3; $('bGrade').style.opacity = .3; }
-    bg.visible = false;
-    renderer.setRenderTarget(xrRT);
-    renderer.render(scene, camera);
-    if (!placed){ renderer.clearDepth(); renderer.render(reticleScene, camera); }
-    return;
-  }
-  hasCam = true; bg.visible = true;
-  renderer.properties.get(camTex).__webglTexture = tex;
-
-  const xrCam = renderer.xr.getCamera().cameras[0];
-  const vp = xrCam.viewport;
-  const long = wantPhoto ? PHOTO_LONG_SIDE : REC_LONG_SIDE;
-  sizeTargets(vp.z, vp.w, (wantPhoto || recording) ? long : Math.max(vp.z, vp.w));
-
-  // pass A: camera feed + car, linear, offscreen
-  camera.matrixWorld.copy(xrCam.matrixWorld);
-  camera.matrixWorldInverse.copy(xrCam.matrixWorldInverse);
-  camera.projectionMatrix.copy(xrCam.projectionMatrix);
-  camera.projectionMatrixInverse.copy(xrCam.projectionMatrixInverse);
-  renderer.xr.enabled = false;
-  renderer.setRenderTarget(rtScene); renderer.clear();
-  renderer.render(scene, camera);
-  gradeMat.uniforms.tScene.value = rtScene.texture;
-  applyGrade();
-
-  // pass B1: graded result -> file/video buffer (only when capturing)
-  if (wantPhoto || recording){
-    renderer.setRenderTarget(outRT);
-    renderer.render(quadScene, quadCam);
-    readOut();
-    if (wantPhoto){ wantPhoto = false; outCanvas.toBlob(b => saveBlob(b, `car-ar-${Date.now()}.jpg`), 'image/jpeg', .95); }
-  }
-  renderer.xr.enabled = true;
-
-  // pass B2: graded result -> screen
-  renderer.setRenderTarget(xrRT);
-  renderer.render(quadScene, quadCam);
-  if (!placed){ renderer.clearDepth(); renderer.render(reticleScene, camera); }
-});
-
-/* ---------- Lite mode: any phone with a camera + gyro (no SLAM) ---------- */
-let lite = false, liteStream = null, video = null, orient = null, litePos = new THREE.Vector3(), liteDist = 1, lastSample = 0;
-const CAM_HEIGHT = 1.5;                       // assumed phone height above the ground (metres)
-const zee = new THREE.Vector3(0,0,1), eul = new THREE.Euler(), qa = new THREE.Quaternion(), q1 = new THREE.Quaternion(-Math.SQRT1_2,0,0,Math.SQRT1_2);
-const sampler = document.createElement('canvas'); sampler.width = sampler.height = 8;
-const sctx = sampler.getContext('2d', {willReadFrequently:true});
-const onOrient = e => { if (e.alpha != null) orient = e; };
-const rad = THREE.MathUtils.degToRad;
-
-async function startLite(){
-  if (window.DeviceOrientationEvent && DeviceOrientationEvent.requestPermission){
-    if (await DeviceOrientationEvent.requestPermission() !== 'granted') throw new Error('Motion access was denied');
-  }
-  liteStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}, width:{ideal:1920}, height:{ideal:1080}}, audio:false});
-  video = document.createElement('video'); video.playsInline = true; video.muted = true; video.srcObject = liteStream; await video.play();
-  bgMat.uniforms.tCam.value = new THREE.VideoTexture(video);
-  scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), .04).texture;
-  addEventListener('deviceorientation', onOrient);
-  lite = true; hasCam = true; placed = false; stage.visible = false; orient = null;
-  $('shutter').style.opacity = $('rec').style.opacity = $('bGrade').style.opacity = ''; delete $('bar').dataset.nocam;
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5)); renderer.setSize(innerWidth, innerHeight);
-  Object.assign(renderer.domElement.style, {display:'block', position:'fixed', inset:'0', width:'100%', height:'100%', zIndex:'0'});
-  $('rowDist').hidden = false;
-  $('landing').style.display = 'none'; $('ui').classList.add('on');
-  $('hint').classList.remove('off'); $('hint').textContent = 'Aim at the ground and tap to park the car';
-}
-function stopLite(){
-  if (recording) stopRec();
-  lite = false; liteStream && liteStream.getTracks().forEach(t => t.stop());
-  removeEventListener('deviceorientation', onOrient);
-  renderer.domElement.style.display = 'none'; scene.environment = null; bgMat.uniforms.tCam.value = camTex; bgMat.uniforms.uCrop.value.set(1,1);
-  $('rowDist').hidden = true; $('ui').classList.remove('on'); $('landing').style.display = '';
-}
-function groundPoint(nx, ny, cam = camera){           // screen NDC -> point on the ground plane (y = 0)
-  if (!cam) return null;
-  if (cam !== camera) cam.updateMatrixWorld();
-  cam.projectionMatrixInverse.copy(cam.projectionMatrix).invert();
-  const o = new THREE.Vector3().setFromMatrixPosition(cam.matrixWorld);
-  const d = new THREE.Vector3(nx, ny, .5).unproject(cam).sub(o).normalize();
-  if (d.y > -0.03) return null;
-  const t = -o.y / d.y; if (t > 40) return null;
-  const r = o.addScaledVector(d, t);
-  return isFinite(r.x + r.y + r.z) ? r : null;
-}
-renderer.domElement.addEventListener('pointerup', e => {
-  if (!((lite && arOn) || (w8 && cam8)) || placed) return;
-  const pt = groundPoint(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight * 2 - 1), w8 ? cam8 : camera);
-  if (!pt){ $('hint').textContent = 'Aim lower, at the ground'; return; }
-  litePos.copy(pt); liteDist = 1; $('dist').value = 1; ppCar.refresh();
-  stage.position.copy(pt); stage.visible = true; placed = true; reticle.visible = false; $('hint').classList.add('off');
-});
-function adaptLight(src){                           // match car lighting to the camera image
-  sctx.drawImage(src, 0, 0, 8, 8);
-  const d = sctx.getImageData(0, 0, 8, 8).data; let r = 0, g = 0, b = 0;
-  for (let i = 0; i < d.length; i += 4){ r += d[i]; g += d[i+1]; b += d[i+2]; }
-  r /= 64*255; g /= 64*255; b /= 64*255;
-  const lum = Math.max(.05, .2126*r + .7152*g + .0722*b), k = Math.min(1.6, Math.max(.25, lum*2.2));
-  const tint = [r, g, b].map(c => Math.min(1.15, Math.max(.7, c / lum)));
-  hemi.color.setRGB(...tint); sun.color.setRGB(...tint);
-  hemi.intensity = .35 + k*.8; sun.intensity = .4 + k*2.2;
-  shadowPlane.material.opacity = .2 + Math.min(1, lum*2) * .35;
-  yaw.traverse(o => { if (o.isMesh) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => m.envMapIntensity = k*.8); });
-}
-function liteFrame(){
-  const w = innerWidth, h = innerHeight, asp = w / h, dpr = renderer.getPixelRatio();
-  if (renderer.domElement.width !== Math.round(w*dpr)) renderer.setSize(w, h);
-  camera.aspect = asp; camera.near = .05; camera.far = 200;
-  camera.fov = asp < 1 ? 70 : 2 * THREE.MathUtils.radToDeg(Math.atan(Math.tan(rad(35)) / asp));   // ~70° across the long side
-  camera.updateProjectionMatrix();
-  if (!arOn) qa.identity();
-  else if (orient){
-    const o = rad((screen.orientation && screen.orientation.angle) || window.orientation || 0);
-    eul.set(rad(orient.beta), rad(orient.alpha), -rad(orient.gamma), 'YXZ');
-    qa.setFromEuler(eul).multiply(q1).multiply(new THREE.Quaternion().setFromAxisAngle(zee, -o));
-  }
-  camera.matrixWorld.compose(new THREE.Vector3(0, CAM_HEIGHT, 0), qa, new THREE.Vector3(1,1,1));
-  camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
-  const va = video.videoWidth / (video.videoHeight || 1);
-  bgMat.uniforms.uCrop.value.set((facing === 'user' ? -1 : 1) * (asp > va ? 1 : asp / va), asp > va ? va / asp : 1);
-  if (assists.hist && performance.now() - lastHist > 250){ lastHist = performance.now(); try { drawHist(); } catch(e){} }
-  updateLevel();
-  bg.visible = true;
-  if (arOn && performance.now() - lastSample > 400){ lastSample = performance.now(); try { adaptLight(video); } catch(e){} }
-  if (!arOn){ stage.visible = false; reticle.visible = false; }
-  else if (placed) stage.position.copy(litePos).multiplyScalar(liteDist);
-  else {
-    const pt = groundPoint(0, 0);
-    reticle.visible = !!pt; if (pt) reticle.matrix.makeTranslation(pt.x, pt.y, pt.z);
-  }
-  if (arOn) updateSun();
-
-  video.style.display = arOn ? 'none' : 'block';
-  if (!arOn){
-    const U = gradeMat.uniforms;
-    if (!wantPhoto && isIdentity()){                // nothing to grade: let the <video> show through, no GPU work
-      renderer.setRenderTarget(null); renderer.setClearColor(0x000000, 0); renderer.clear(); return;
-    }
-    syncPreview(); smartTick();
-    U.tScene.value = ptex; U.uSrgb.value = 1; applyGrade();
-    const bx = (facing === 'user' ? -1 : 1) * (asp > va ? 1 : asp / va), by = asp > va ? va / asp : 1, W = smartWindow(bx, by);
-    U.uSrc.value.set(bx / W.z, by / W.z, bgMat.uniforms.uFlip.value); U.uPan.value.set(W.px, W.py); placeFaceBox(bx / W.z, by / W.z, W);
-    U.uTexel.value.set(1/(w*dpr), 1/(h*dpr));
-    if (wantPhoto){                                 // fallback when ImageCapture is unavailable: current frame at stream resolution
-      wantPhoto = false;
-      let pw, ph; if (asp > va){ pw = video.videoWidth; ph = pw / asp; } else { ph = video.videoHeight; pw = ph * asp; }
-      U.tScene.value = vtex; U.uAssist.value = 0;
-      renderer.setPixelRatio(1); renderer.setSize(Math.round(pw), Math.round(ph), false);
-      renderer.setRenderTarget(null); renderer.render(quadScene, quadCam);
-      renderer.domElement.toBlob(b => b ? saveBlob(b, `IMG_${Date.now()}.jpg`) : toast('Photo failed'), 'image/jpeg', .95);
-      renderer.setPixelRatio(dpr); renderer.setSize(w, h, false);
-      U.tScene.value = ptex;
-    }
-    U.uAssist.value = recording ? 0 : 1;
-    renderer.setRenderTarget(null); renderer.render(quadScene, quadCam);
-    U.uAssist.value = 0; return;
-  }
-  syncPreview();                                    // AR (basic) mode: low-res copy of the camera for the offscreen pass
-
-  let tw = w*dpr, th = h*dpr, lng = Math.max(tw, th);
-  if (wantPhoto){                                   // photos use the camera's native resolution
-    if (asp > va){ tw = video.videoWidth; th = tw / asp; } else { th = video.videoHeight; tw = th * asp; }
-    lng = 2048;
-  }
-  sizeTargets(tw, th, lng);
-  gradeMat.uniforms.uTexel.value.set(1/rtW, 1/rtH);
-  renderer.setRenderTarget(rtScene); renderer.clear(); renderer.render(scene, camera);
-  gradeMat.uniforms.tScene.value = rtScene.texture; gradeMat.uniforms.uSrgb.value = 0; applyGrade();
-  if (wantPhoto){
-    gradeMat.uniforms.uAssist.value = 0;
-    renderer.setRenderTarget(outRT); renderer.render(quadScene, quadCam); readOut();
-    wantPhoto = false; outCanvas.toBlob(b => saveBlob(b, `IMG_${Date.now()}.jpg`), 'image/jpeg', .96);
-  }
-  gradeMat.uniforms.uAssist.value = recording ? 0 : 1;
-  renderer.setRenderTarget(null); renderer.clear(); renderer.render(quadScene, quadCam);
-  if (arOn && !placed){ renderer.clearDepth(); renderer.render(reticleScene, camera); }
-  gradeMat.uniforms.uAssist.value = 0;
-}
-
-/* ---------- SLAM mode: 8th Wall engine (works without ARCore/ARKit, absolute scale) ---------- */
-let w8 = false, cam8 = null, xrCanvas = null, srcTex = null, engineReady = null;
-function loadEngine(){
-  window.THREE = {...THREE};                                  // the engine renders its scene with a global THREE
-  return new Promise((res, rej) => {
-    if (window.XR8) return res();
-    window.addEventListener('xrloaded', () => res(), {once:true});
-    const sc = document.createElement('script');
-    sc.src = 'https://cdn.jsdelivr.net/npm/@8thwall/engine-binary@1/dist/xr.js';
-    sc.async = true; sc.crossOrigin = 'anonymous'; sc.dataset.preloadChunks = 'slam';
-    sc.onerror = () => rej(new Error('Could not load the tracking engine'));
-    document.head.appendChild(sc);
-  });
-}
-function sizeXrCanvas(){
-  const dpr = Math.min(devicePixelRatio, 1.5);
-  xrCanvas.width = Math.round(innerWidth*dpr); xrCanvas.height = Math.round(innerHeight*dpr);
-}
-async function startW8(){
-  await engineReady;
-  video && (video.srcObject = null); await sleep(350);          // make sure our own camera stream is fully released
-  xrCanvas = document.createElement('canvas');
-  Object.assign(xrCanvas.style, {position:'fixed', left:0, top:0, width:'100%', height:'100%', opacity:0, pointerEvents:'none', zIndex:-1});
-  document.body.appendChild(xrCanvas); sizeXrCanvas();
-  if (XR8.loadChunk) await XR8.loadChunk('slam');
-  if (!XR8.XrController) throw new Error('Tracking engine did not finish loading');
-  XR8.XrController.configure({scale:'absolute'});
-  XR8.addCameraPipelineModules([
-    XR8.GlTextureRenderer.pipelineModule(),     // camera feed
-    XR8.Threejs.pipelineModule(),               // three.js scene that follows the SLAM pose
-    XR8.XrController.pipelineModule(),          // world tracking
-    {name:'car-ar',
-      onStart: () => {
-        const {scene: s8, camera: c8, renderer: r8} = XR8.Threejs.xrScene();
-        cam8 = c8;
-        r8.shadowMap.enabled = true; r8.shadowMap.type = THREE.PCFSoftShadowMap;
-        s8.environment = new THREE.PMREMGenerator(r8).fromScene(new RoomEnvironment(), .04).texture;
-        s8.add(hemi, sun, sun.target, stage, reticle);
-        c8.position.set(0, 1.5, 0);
-        XR8.XrController.updateCameraProjectionMatrix({origin: c8.position, facing: c8.quaternion});
-        srcTex = new THREE.CanvasTexture(xrCanvas); srcTex.generateMipmaps = false; srcTex.minFilter = THREE.LinearFilter;
-      },
-      onUpdate: () => {
-        if (!placed){
-          const pt = groundPoint(0, 0, cam8);
-          reticle.visible = !!pt; if (pt) reticle.matrix.makeTranslation(pt.x, pt.y, pt.z);
-        }
-        updateSun();
-      },
-      onRender: () => {                         // runs right after the engine drew camera + car into its canvas
-        if (renderer.domElement.width !== xrCanvas.width || renderer.domElement.height !== xrCanvas.height)
-          renderer.setSize(xrCanvas.width, xrCanvas.height, false);
-        if (performance.now() - lastSample > 400){ lastSample = performance.now(); try { adaptLight(xrCanvas); } catch(e){} }
-        srcTex.needsUpdate = true;
-        gradeMat.uniforms.tScene.value = srcTex; gradeMat.uniforms.uSrgb.value = 1; applyGrade();
-        renderer.setRenderTarget(null); renderer.render(quadScene, quadCam);
-        if (wantPhoto){ wantPhoto = false; renderer.domElement.toBlob(b => saveBlob(b, `car-ar-${Date.now()}.jpg`), 'image/jpeg', .95); }
-      },
-      onException: e => { console.error(e); w8Fail(e); }}
-  ]);
-  w8 = true; hasCam = true; placed = false; stage.visible = false;
-  $('shutter').style.opacity = $('rec').style.opacity = $('bGrade').style.opacity = ''; delete $('bar').dataset.nocam;
-  renderer.setPixelRatio(1);
-  Object.assign(renderer.domElement.style, {display:'block', position:'fixed', inset:'0', width:'100%', height:'100%', zIndex:'0'});
-  $('landing').style.display = 'none'; $('ui').classList.add('on');
-  $('hint').classList.remove('off'); $('hint').textContent = 'Move the phone slowly forward and back, then tap the ground';
-  XR8.run({canvas: xrCanvas, allowedDevices: XR8.XrConfig.device().ANY});
-  setTimeout(() => { if (w8 && !cam8) w8Fail(new Error('Tracking engine did not start')); }, 12000);
-}
-function w8Fail(e){                                  // engine could not start: go back to the camera and use basic AR
-  if (!w8) return; w8 = false; cam8 = null;
-  try { XR8.stop(); XR8.clearCameraPipelineModules(); } catch(_){}
-  xrCanvas && xrCanvas.remove(); startMode = 'lite';
-  $('ui').classList.remove('ar', 'arx');
-  toast('Tracking engine couldn’t start here. Using basic AR.');
-  startCam().then(() => enterAR());
-}
-
-/* ---------- capture ---------- */
-let lastCap = null;
-function saveBlob(blob, name){
-  const url = URL.createObjectURL(blob), isImg = blob.type.startsWith('image');
-  const a = document.createElement('a'); a.href = url; a.download = name; a.click();   // saved to Downloads
-  lastCap = {url, blob, name, isImg};
-  const t = $('thumb'); t.classList.add('on'); t.classList.toggle('isvid', !isImg);
-  t.style.backgroundImage = isImg ? `url(${url})` : 'none';
-  t.classList.remove('pulse'); void t.offsetWidth; t.classList.add('pulse');
-  toast(isImg ? 'Photo saved' : 'Video saved');
-}
-$('thumb').onclick = () => {
-  if (!lastCap) return toast('Nothing captured yet');
-  const w = $('viewer').querySelector('.vwrap'); w.innerHTML = '';
-  const el = document.createElement(lastCap.isImg ? 'img' : 'video'); el.src = lastCap.url;
-  if (!lastCap.isImg){ el.controls = true; el.playsInline = true; el.autoplay = true; }
-  w.appendChild(el); $('viewer').classList.add('on');
-};
-$('vClose').onclick = () => { $('viewer').classList.remove('on'); $('viewer').querySelector('.vwrap').innerHTML = ''; };
-$('vSave').onclick = () => { const a = document.createElement('a'); a.href = lastCap.url; a.download = lastCap.name; a.click(); };
-$('vShare').onclick = async () => {
-  try { const f = new File([lastCap.blob], lastCap.name, {type: lastCap.blob.type});
-    if (navigator.canShare && navigator.canShare({files:[f]})) await navigator.share({files:[f]}); else toast('Sharing isn’t supported here. Use Save.'); } catch(e){}
-};
-async function startRec(){
-  nativeRec = false; const ident = lite && !arOn && isIdentity(); nativeRec = ident;
-  const stream = nativeRec ? new MediaStream(camStream.getVideoTracks()) : (w8 || lite ? renderer.domElement : outCanvas).captureStream(30);
-  try { const a = await navigator.mediaDevices.getUserMedia({audio:true}); a.getAudioTracks().forEach(tr => stream.addTrack(tr)); } catch(e){}
-  const type = ['video/mp4;codecs=avc1','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'].find(t => MediaRecorder.isTypeSupported(t));
-  recorder = new MediaRecorder(stream, {mimeType:type, videoBitsPerSecond: nativeRec ? Math.min(40e6, Math.round((track.getSettings().width || 1920) * (track.getSettings().height || 1080) * 4)) : 10_000_000});
-  chunks = []; recorder.ondataavailable = e => e.data.size && chunks.push(e.data);
-  recorder.onstop = () => {
-    stream.getTracks().forEach(tr => { if (!(nativeRec && tr.kind === 'video')) tr.stop(); }); nativeRec = false;
-    const ext = recorder.mimeType.includes('mp4') ? 'mp4' : 'webm';
-    saveBlob(new Blob(chunks,{type:recorder.mimeType}), `car-ar-${Date.now()}.${ext}`);
-  };
-  recorder.start(1000); recording = true; recStart = performance.now();
-  $('shutter').classList.add('rec'); $('rec').classList.add('on'); $('timer').classList.add('on');
-  const tick = () => { if (!recording) return; const s = Math.floor((performance.now()-recStart)/1000);
-    $('timer').textContent = `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
-    $('shutter').style.setProperty('--pp', ((performance.now() - recStart) / 1000 % 60) / 60 * 100); setTimeout(tick, 500); };
-  tick();
-}
-function stopRec(){ $('shutter').style.setProperty('--pp', 0); recording = false; recorder && recorder.state !== 'inactive' && recorder.stop();
-  $('shutter').classList.remove('rec'); $('rec').classList.remove('on'); $('timer').classList.remove('on'); }
-
-/* ---------- UI ---------- */
-document.querySelectorAll('.hit').forEach(el => el.addEventListener('beforexrselect', e => e.preventDefault()));
-const ROWS = [
-  ['exposure','Exposure',-2,2,.05],['contrast','Contrast',.6,1.5,.01],['saturation','Saturation',0,2,.01],
-  ['temp','Temperature',-1,1,.01],['tint','Tint',-1,1,.01],['highlights','Highlights',-1,1,.01],
-  ['shadows','Shadows',-1,1,.01],['vignette','Vignette',0,1,.01]];
-const DEFAULT = {...G};
+const DEFAULT_G = {...G};
 const PRESETS = {
   Natural:{},
   Cinematic:{exposure:-.15,contrast:1.18,saturation:.85,temp:-.15,tint:.05,highlights:-.25,shadows:.15,vignette:.35},
   Vivid:{contrast:1.12,saturation:1.4,highlights:-.1,shadows:.1},
   Warm:{temp:.4,tint:.05,saturation:1.1,contrast:1.05},
-  Mono:{saturation:0,contrast:1.2,vignette:.25}};
-function ParamPanel(root, getParams){
-  root.classList.add('pp');
-  root.innerHTML = '<div class="pchips"></div><div class="pread"><b></b><small></small></div><div class="rwrap"><div class="ruler"><div class="rtrack"></div></div><i class="needle"></i></div>';
-  const chips = root.querySelector('.pchips'), big = root.querySelector('.pread b'), small = root.querySelector('.pread small');
-  const ruler = root.querySelector('.ruler'), track = root.querySelector('.rtrack'), RANGE = 900;
-  let params = [], cur = 0, lock = false, lastTick = 0;
-  const frac = p => (p.get() - p.min) / (p.max - p.min);
-  const size = () => { track.style.width = (ruler.clientWidth + RANGE) + 'px'; track.style.setProperty('--off', ruler.clientWidth / 2 + 'px'); };
-  function paint(){
-    const p = params[cur]; if (!p) return;
-    big.textContent = p.fmt(p.get()); small.textContent = p.label;
-    chips.querySelectorAll('button').forEach((b, i) => { b.classList.toggle('sel', i === cur); b.querySelector('i').textContent = params[i].fmt(params[i].get()); b.classList.toggle('mod', Math.abs(params[i].get() - params[i].def) > 1e-6); });
+  Mono:{saturation:0,contrast:1.2,vignette:.25}
+};
+const RES = [[1280,720,'HD'],[1920,1080,'FHD'],[3840,2160,'4K']];
+
+let camStream = null, videoTrack = null, imageCapture = null;
+let recorder = null, recording = false, recStart = 0, recStream = null;
+let busy = false;
+let lastCap = null;
+let lastHist = 0;
+
+/* ---------- WebGL grading ---------- */
+const FRAG = `precision highp float;
+varying vec2 v;
+uniform sampler2D uTex;
+uniform vec4 uG1;
+uniform vec4 uG2;
+uniform float uFalse, uZebra;
+uniform vec2 uTexel;
+
+vec3 tanh3(vec3 x){
+  vec3 y = clamp(x, -10.0, 10.0);
+  vec3 e = exp(2.0 * y);
+  return (e - 1.0) / (e + 1.0);
+}
+vec3 softc(vec3 x){
+  vec3 o = max(x - 0.8, 0.0);
+  return min(x, 0.8) + 0.2 * tanh3(o / 0.2);
+}
+
+void main(){
+  vec3 c = texture2D(uTex, v).rgb;
+  c *= exp2(uG1.x);
+  c *= vec3(1.0 + uG1.w * .18, 1.0 - uG2.x * .12, 1.0 - uG1.w * .18);
+  c = softc(max(c, 0.0));
+  float l = dot(c, vec3(.2126, .7152, .0722));
+  c += uG2.z * .18 * (1.0 - smoothstep(0.0, .55, l)) + uG2.y * .18 * smoothstep(.45, 1.0, l);
+  c = (c - .5) * uG1.y + .5;
+  l = dot(c, vec3(.2126, .7152, .0722));
+  c = mix(vec3(l), c, uG1.z);
+  c *= 1.0 - uG2.w * smoothstep(.35, 1.0, length(v - .5) * 1.5);
+
+  if (uFalse > .5) {
+    float fl = dot(c, vec3(.2126, .7152, .0722));
+    vec3 fc;
+    if (fl < .05) fc = vec3(.1, .0, .3);
+    else if (fl < .15) fc = vec3(.0, .2, 1.);
+    else if (fl < .3) fc = vec3(.0, .8, 1.);
+    else if (fl < .45) fc = vec3(.0, 1., .0);
+    else if (fl < .6) fc = vec3(.8, 1., .0);
+    else if (fl < .75) fc = vec3(1., .7, .0);
+    else if (fl < .9) fc = vec3(1., .2, .0);
+    else fc = vec3(1., .0, .5);
+    c = mix(c, fc, .7);
   }
-  function seek(){ const p = params[cur]; if (!p) return; lock = true; ruler.scrollLeft = frac(p) * RANGE; requestAnimationFrame(() => lock = false); }
-  function rebuild(){
-    params = getParams(); cur = Math.min(cur, Math.max(0, params.length - 1)); chips.innerHTML = '';
-    params.forEach((p, i) => { const b = document.createElement('button'); b.innerHTML = `${p.label}<i></i>`; b.onclick = () => { cur = i; paint(); seek(); }; chips.appendChild(b); });
-    chips.style.display = params.length > 1 ? '' : 'none'; root.classList.toggle('empty', !params.length); size(); paint(); seek();
+  if (uZebra > .5 && dot(c, vec3(.2126, .7152, .0722)) > .94) {
+    float stripe = step(.5, fract((gl_FragCoord.x + gl_FragCoord.y) * .03));
+    c = mix(c, vec3(1.), .55 * stripe);
+  }
+  gl_FragColor = vec4(clamp(c, 0., 1.), 1.);
+}`;
+
+const VERT = `attribute vec2 aPos; varying vec2 v;
+void main(){ v = aPos * .5 + .5; gl_Position = vec4(aPos, 0., 1.); }`;
+
+let gl = null, glProg = null, glTex = null, glUni = {};
+
+function initGL() {
+  gl = glCanvas.getContext('webgl', {alpha: false, preserveDrawingBuffer: true, premultipliedAlpha: false});
+  if (!gl) throw new Error('WebGL not available');
+  const vs = gl.createShader(gl.VERTEX_SHADER);
+  gl.shaderSource(vs, VERT); gl.compileShader(vs);
+  const fs = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(fs, FRAG); gl.compileShader(fs);
+  if (!gl.getShaderParameter(fs, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(fs));
+  glProg = gl.createProgram();
+  gl.attachShader(glProg, vs); gl.attachShader(glProg, fs);
+  gl.linkProgram(glProg); gl.useProgram(glProg);
+
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  const aPos = gl.getAttribLocation(glProg, 'aPos');
+  gl.enableVertexAttribArray(aPos);
+  gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+  glTex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, glTex);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+  glUni = {
+    tex:    gl.getUniformLocation(glProg, 'uTex'),
+    g1:     gl.getUniformLocation(glProg, 'uG1'),
+    g2:     gl.getUniformLocation(glProg, 'uG2'),
+    falseC: gl.getUniformLocation(glProg, 'uFalse'),
+    zebra:  gl.getUniformLocation(glProg, 'uZebra'),
+    texel:  gl.getUniformLocation(glProg, 'uTexel')
+  };
+}
+
+function drawGraded(src) {
+  if (!gl) return;
+  if (src && src.readyState !== undefined && src.readyState < 2) return;
+  if (src && src.videoWidth !== undefined && (!src.videoWidth || !src.videoHeight)) return;
+
+  const w = glCanvas.width, h = glCanvas.height;
+  if (!w || !h) return;
+  gl.viewport(0, 0, w, h);
+  gl.useProgram(glProg);
+  gl.bindTexture(gl.TEXTURE_2D, glTex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
+  gl.uniform1i(glUni.tex, 0);
+  gl.uniform4f(glUni.g1, G.exposure, G.contrast, G.saturation, G.temp);
+  gl.uniform4f(glUni.g2, G.tint, G.highlights, G.shadows, G.vignette);
+  gl.uniform1f(glUni.falseC, state.falseColor ? 1 : 0);
+  gl.uniform1f(glUni.zebra,  state.zebra ? 1 : 0);
+  gl.uniform2f(glUni.texel, 1 / w, 1 / h);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+}
+
+function isIdentity() {
+  return !state.falseColor && !state.zebra &&
+    G.exposure === 0 && G.contrast === 1 && G.saturation === 1 &&
+    G.temp === 0 && G.tint === 0 && G.highlights === 0 && G.shadows === 0 && G.vignette === 0;
+}
+
+/* ---------- audio pipeline ---------- */
+let audioCtx = null, audioSrc = null, hpf = null, comp = null, gainNode = null, analyser = null, dest = null;
+let meterRAF = 0;
+
+async function setupAudio() {
+  try {
+    if (audioCtx) { audioCtx.close().catch(()=>{}); audioCtx = null; }
+    const constraints = {
+      audio: state.micId
+        ? {deviceId: {exact: state.micId}, echoCancellation:false, noiseSuppression:false, autoGainControl:false}
+        : {echoCancellation:false, noiseSuppression:false, autoGainControl:false}
+    };
+    const micStream = await navigator.mediaDevices.getUserMedia(constraints);
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    audioSrc = audioCtx.createMediaStreamSource(micStream);
+    hpf = audioCtx.createBiquadFilter();
+    hpf.type = 'highpass'; hpf.frequency.value = state.wind ? 90 : 20;
+    comp = audioCtx.createDynamicsCompressor();
+    comp.threshold.value = state.limiter ? -18 : 0;
+    comp.knee.value = 6;
+    comp.ratio.value = state.limiter ? 20 : 1;
+    comp.attack.value = 0.003;
+    comp.release.value = 0.25;
+    gainNode = audioCtx.createGain();
+    gainNode.gain.value = state.gain;
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 512;
+    dest = audioCtx.createMediaStreamDestination();
+
+    audioSrc.connect(hpf);
+    hpf.connect(comp);
+    comp.connect(gainNode);
+    gainNode.connect(analyser);
+    gainNode.connect(dest);
+
+    startMeter();
+  } catch (e) {
+    console.warn('Audio unavailable', e);
+    showHint('Mic unavailable — video only');
+  }
+}
+
+function startMeter() {
+  const meter = $('#audioMeter');
+  if (!meter) return;
+  if (!meter.children.length) {
+    for (let i = 0; i < 16; i++) meter.appendChild(document.createElement('i'));
+  }
+  if (!analyser) return;
+  const data = new Uint8Array(analyser.fftSize);
+  cancelAnimationFrame(meterRAF);
+  (function loop() {
+    analyser.getByteTimeDomainData(data);
+    let peak = 0;
+    for (let i = 0; i < data.length; i++) {
+      const v = Math.abs(data[i] - 128) / 128;
+      if (v > peak) peak = v;
+    }
+    const bars = meter.children;
+    const lit = Math.round(peak * bars.length * 1.4);
+    for (let i = 0; i < bars.length; i++) bars[i].style.height = i < lit ? '100%' : '18%';
+    meterRAF = requestAnimationFrame(loop);
+  })();
+}
+
+async function populateMics() {
+  const sel = $('#micSel');
+  if (!sel) return;
+  try {
+    const devs = await navigator.mediaDevices.enumerateDevices();
+    const mics = devs.filter(d => d.kind === 'audioinput');
+    sel.innerHTML = '';
+    mics.forEach((d, i) => {
+      const opt = document.createElement('option');
+      opt.value = d.deviceId;
+      opt.textContent = d.label || `Microphone ${i + 1}`;
+      sel.appendChild(opt);
+    });
+    state.micId = sel.value = mics[0]?.deviceId || '';
+  } catch (e) {}
+}
+
+/* ---------- camera ---------- */
+async function startCamera() {
+  showHint('Starting camera…');
+  try {
+    if (camStream) camStream.getTracks().forEach(t => t.stop());
+    const [rw, rh] = RES[state.resIdx];
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video: {facingMode: {ideal: state.facing}, width: {ideal: rw}, height: {ideal: rh}, frameRate: {ideal: 30}},
+      audio: false
+    });
+    video.srcObject = camStream;
+    await video.play();
+    videoTrack = camStream.getVideoTracks()[0];
+    try { imageCapture = new ImageCapture(videoTrack); } catch (e) { imageCapture = null; }
+    resizeCanvas();
+    await setupAudio();
+    await populateMics();
+    showHint('Tap the shutter, or pick a mode');
+    setTimeout(() => hint.classList.remove('on'), 2200);
+  } catch (e) {
+    console.error(e);
+    setErr('Camera failed: ' + e.message + '\n\nCheck site permissions (must be HTTPS or localhost) and that no other app is using the camera.');
+  }
+}
+
+function resizeCanvas() {
+  const vw = video.videoWidth || 1280;
+  const vh = video.videoHeight || 720;
+  glCanvas.width = vw;
+  glCanvas.height = vh;
+  guides.width = vw;
+  guides.height = vh;
+  drawGuides();
+}
+
+/* ---------- guides ---------- */
+function drawGuides() {
+  gctx.clearRect(0, 0, guides.width, guides.height);
+  if (!state.grid) return;
+  const w = guides.width, h = guides.height;
+  gctx.strokeStyle = 'rgba(255,255,255,.35)';
+  gctx.lineWidth = Math.max(1, w / 900);
+  for (let i = 1; i < 3; i++) {
+    gctx.beginPath(); gctx.moveTo(w * i / 3, 0); gctx.lineTo(w * i / 3, h); gctx.stroke();
+    gctx.beginPath(); gctx.moveTo(0, h * i / 3); gctx.lineTo(w, h * i / 3); gctx.stroke();
+  }
+  gctx.strokeStyle = 'rgba(255,255,255,.55)';
+  gctx.beginPath(); gctx.moveTo(w / 2 - 12, h / 2); gctx.lineTo(w / 2 + 12, h / 2);
+  gctx.moveTo(w / 2, h / 2 - 12); gctx.lineTo(w / 2, h / 2 + 12); gctx.stroke();
+}
+
+/* ---------- histogram ---------- */
+function drawHistogram() {
+  if (!state.hist) return;
+  if (!video.videoWidth) return;
+  const c = document.createElement('canvas');
+  const s = 60;
+  c.width = s; c.height = Math.round(s * (video.videoHeight / video.videoWidth || 9 / 16));
+  const ctx = c.getContext('2d', {willReadFrequently: true});
+  ctx.drawImage(video, 0, 0, c.width, c.height);
+  const d = ctx.getImageData(0, 0, c.width, c.height).data;
+  const bins = new Uint32Array(64);
+  const dr = new Uint32Array(64), dg = new Uint32Array(64), db = new Uint32Array(64);
+  for (let i = 0; i < d.length; i += 4) {
+    const r = d[i] >> 2, g = d[i+1] >> 2, b = d[i+2] >> 2;
+    const l = Math.round((d[i] * 0.2126 + d[i+1] * 0.7152 + d[i+2] * 0.0722) / 4);
+    bins[l]++;
+    dr[r]++; dg[g]++; db[b]++;
+  }
+  let max = 0;
+  for (let i = 0; i < 64; i++) if (bins[i] > max) max = bins[i];
+  hctx.clearRect(0, 0, histCv.width, histCv.height);
+  const W = histCv.width, H = histCv.height;
+  hctx.globalCompositeOperation = 'lighter';
+  const drawC = (arr, color) => {
+    hctx.fillStyle = color;
+    for (let i = 0; i < 64; i++) {
+      const h = (arr[i] / max) * (H - 4);
+      hctx.fillRect((i / 64) * W, H - h, W / 64, h);
+    }
+  };
+  drawC(dr, 'rgba(255,80,80,.45)');
+  drawC(dg, 'rgba(80,255,80,.45)');
+  drawC(db, 'rgba(80,80,255,.45)');
+  hctx.globalCompositeOperation = 'source-over';
+}
+
+/* ---------- zoom ---------- */
+async function setZoom(z) {
+  state.zoom = z;
+  document.querySelectorAll('.zoom').forEach(b => b.classList.toggle('on', +b.dataset.z === z));
+  if (!videoTrack) return;
+  try {
+    const caps = videoTrack.getCapabilities?.();
+    if (caps && caps.zoom) await videoTrack.applyConstraints({advanced: [{zoom: z}]});
+  } catch (e) {}
+}
+
+/* ---------- flash / torch ---------- */
+async function toggleTorch() {
+  if (!videoTrack) return;
+  try {
+    const caps = videoTrack.getCapabilities?.();
+    if (!caps || !caps.torch) { showHint('Torch not supported'); return; }
+    state.torch = !state.torch;
+    await videoTrack.applyConstraints({advanced: [{torch: state.torch}]});
+    $('#bFlash').classList.toggle('act', state.torch);
+  } catch (e) { showHint('Torch unavailable'); }
+}
+
+/* ---------- capture: photo ---------- */
+async function takePhoto() {
+  if (busy) return;
+  busy = true;
+  const flash = $('#shot');
+  flash.classList.remove('go'); void flash.offsetWidth; flash.classList.add('go');
+  shutter.classList.remove('snap'); void shutter.offsetWidth; shutter.classList.add('snap');
+  navigator.vibrate?.(20);
+  try {
+    if (state.timerSec > 0) await countdown(state.timerSec);
+    let blob = null;
+    if (imageCapture) {
+      try {
+        const pc = await imageCapture.getPhotoCapabilities();
+        const opt = {};
+        if (pc.imageWidth) opt.imageWidth = pc.imageWidth.max;
+        if (pc.imageHeight) opt.imageHeight = pc.imageHeight.max;
+        if (state.torch && (pc.fillLightMode || []).includes('flash')) opt.fillLightMode = 'flash';
+        blob = await imageCapture.takePhoto(opt);
+      } catch (e) { blob = null; }
+    }
+    if (!blob) {
+      const c = document.createElement('canvas');
+      c.width = video.videoWidth; c.height = video.videoHeight;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(video, 0, 0);
+      if (isIdentity()) {
+        blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.95));
+      } else {
+        glCanvas.width = c.width; glCanvas.height = c.height;
+        drawGraded(video);
+        blob = await new Promise(r => glCanvas.toBlob(r, 'image/jpeg', 0.95));
+        resizeCanvas();
+      }
+    } else if (!isIdentity()) {
+      const bmp = await createImageBitmap(blob, {imageOrientation: 'from-image'});
+      glCanvas.width = bmp.width; glCanvas.height = bmp.height;
+      drawGraded(bmp);
+      blob = await new Promise(r => glCanvas.toBlob(r, 'image/jpeg', 0.95));
+      bmp.close();
+      resizeCanvas();
+    }
+    saveBlob(blob, `CAMPRO_${Date.now()}.jpg`, 'image');
+  } catch (e) {
+    console.error(e);
+    showHint('Photo failed: ' + e.message);
+  } finally {
+    busy = false;
+  }
+}
+
+/* ---------- capture: video ---------- */
+function startRecording() {
+  if (recording) return;
+  try {
+    const vw = video.videoWidth, vh = video.videoHeight;
+    if (glCanvas.width !== vw || glCanvas.height !== vh) {
+      glCanvas.width = vw; glCanvas.height = vh;
+    }
+    recStream = glCanvas.captureStream(30);
+    if (dest && dest.stream.getAudioTracks().length) {
+      dest.stream.getAudioTracks().forEach(t => recStream.addTrack(t));
+    }
+    const type = ['video/mp4;codecs=avc1', 'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm']
+      .find(t => MediaRecorder.isTypeSupported(t)) || 'video/webm';
+    recorder = new MediaRecorder(recStream, {mimeType: type, videoBitsPerSecond: 10_000_000});
+    const chunks = [];
+    recorder.ondataavailable = e => e.data.size && chunks.push(e.data);
+    recorder.onstop = () => {
+      const ext = recorder.mimeType.includes('mp4') ? 'mp4' : 'webm';
+      saveBlob(new Blob(chunks, {type: recorder.mimeType}), `CAMPRO_${Date.now()}.${ext}`, 'video');
+      recStream = null; recorder = null;
+    };
+    recorder.start(1000);
+    recording = true;
+    recStart = performance.now();
+    shutter.classList.add('rec');
+    timerEl.classList.add('on');
+    tickRecording();
+  } catch (e) {
+    console.error(e);
+    showHint('Recording failed: ' + e.message);
+  }
+}
+
+function stopRecording() {
+  if (!recording) return;
+  recording = false;
+  try { recorder && recorder.state !== 'inactive' && recorder.stop(); } catch (e) {}
+  shutter.classList.remove('rec');
+  timerEl.classList.remove('on');
+  shutter.style.setProperty('--pp', 0);
+}
+
+function tickRecording() {
+  if (!recording) return;
+  const s = Math.floor((performance.now() - recStart) / 1000);
+  timerEl.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  shutter.style.setProperty('--pp', ((performance.now() - recStart) / 1000 % 60) / 60 * 100);
+  setTimeout(tickRecording, 250);
+}
+
+/* ---------- capture: burst merge (Ultra 4K / Night) ---------- */
+const MERGE_WORKER_SRC = `
+function grayDown(data, w, h, f) {
+  const dw = (w/f)|0, dh = (h/f)|0;
+  const g = new Float32Array(dw*dh);
+  for (let y=0; y<dh; y++) for (let x=0; x<dw; x++) {
+    let s=0, c=0;
+    for (let dy=0; dy<f; dy++) for (let dx=0; dx<f; dx++) {
+      const px=x*f+dx, py=y*f+dy;
+      if (px>=w || py>=h) continue;
+      const i=(py*w+px)*4;
+      s += data[i]*0.299 + data[i+1]*0.587 + data[i+2]*0.114;
+      c++;
+    }
+    g[y*dw+x] = c ? s/c : 0;
+  }
+  return {data:g, w:dw, h:dh};
+}
+function sampleGray(g,w,h,x,y){
+  x=Math.max(0,Math.min(w-1.001,x)); y=Math.max(0,Math.min(h-1.001,y));
+  const ix=x|0, iy=y|0, ax=x-ix, ay=y-iy, i=iy*w+ix;
+  return g[i]*(1-ax)*(1-ay)+g[i+1]*ax*(1-ay)+g[i+w]*(1-ax)*ay+g[i+w+1]*ax*ay;
+}
+function lkAlign(ref,img,w,h,iters){
+  let dx=0,dy=0;
+  for(let it=0;it<iters;it++){
+    let a11=0,a12=0,a22=0,b1=0,b2=0;
+    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
+      const fx=x+dx, fy=y+dy;
+      const p=sampleGray(img,w,h,fx,fy);
+      const gx=(sampleGray(img,w,h,fx+1,fy)-sampleGray(img,w,h,fx-1,fy))*0.5;
+      const gy=(sampleGray(img,w,h,fx,fy+1)-sampleGray(img,w,h,fx,fy-1))*0.5;
+      const it2=p-ref[y*w+x];
+      a11+=gx*gx; a12+=gx*gy; a22+=gy*gy;
+      b1-=gx*it2; b2-=gy*it2;
+    }
+    const det=a11*a22-a12*a12;
+    if(Math.abs(det)<1e-6) break;
+    const ux=(a22*b1-a12*b2)/det, uy=(a11*b2-a12*b1)/det;
+    dx+=ux; dy+=uy;
+    if(Math.abs(ux)<0.02 && Math.abs(uy)<0.02) break;
+  }
+  return {dx,dy};
+}
+function sampleRGB(data,w,h,x,y){
+  x=Math.max(0,Math.min(w-1.001,x)); y=Math.max(0,Math.min(h-1.001,y));
+  const ix=x|0, iy=y|0, ax=x-ix, ay=y-iy;
+  const i=(iy*w+ix)*4, j=(iy*w+ix+1)*4, k=((iy+1)*w+ix)*4, l=((iy+1)*w+ix+1)*4;
+  const w00=(1-ax)*(1-ay), w10=ax*(1-ay), w01=(1-ax)*ay, w11=ax*ay;
+  return [
+    data[i]*w00+data[j]*w10+data[k]*w01+data[l]*w11,
+    data[i+1]*w00+data[j+1]*w10+data[k+1]*w01+data[l+1]*w11,
+    data[i+2]*w00+data[j+2]*w10+data[k+2]*w01+data[l+2]*w11
+  ];
+}
+self.onmessage = (e) => {
+  const {frames, width, height, scale} = e.data;
+  const n = frames.length;
+  const ow = width*scale, oh = height*scale;
+
+  self.postMessage({type:'progress', phase:'align', value:0});
+  const grays = frames.map(f => grayDown(f.data, width, height, 4));
+  const shifts = [{dx:0,dy:0}];
+  for (let i=1; i<n; i++) {
+    const s = lkAlign(grays[0].data, grays[i].data, grays[0].w, grays[0].h, 10);
+    shifts.push({dx:s.dx*4, dy:s.dy*4});
+    self.postMessage({type:'progress', phase:'align', value:i/n});
+  }
+
+  const out = new Uint8ClampedArray(ow*oh*4);
+  const TILE = 64;
+  for (let y0=0; y0<oh; y0+=TILE) {
+    const y1 = Math.min(oh, y0+TILE);
+    const th = y1-y0;
+    const accR=new Float32Array(ow*th), accG=new Float32Array(ow*th), accB=new Float32Array(ow*th), accW=new Float32Array(ow*th);
+    for (let fi=0; fi<n; fi++) {
+      const fd = frames[fi].data, {dx,dy} = shifts[fi];
+      for (let oy=y0; oy<y1; oy++) for (let ox=0; ox<ow; ox++) {
+        const sx = ox/scale - dx, sy = oy/scale - dy;
+        const p = sampleRGB(fd, width, height, sx, sy);
+        const ti = (oy-y0)*ow + ox;
+        let w = 1;
+        if (fi > 0 && accW[ti] > 0.5) {
+          const mr=accR[ti]/accW[ti], mg=accG[ti]/accW[ti], mb=accB[ti]/accW[ti];
+          const diff = Math.abs(p[0]-mr)+Math.abs(p[1]-mg)+Math.abs(p[2]-mb);
+          if (diff > 60) w = 0.05;
+        }
+        accR[ti]+=p[0]*w; accG[ti]+=p[1]*w; accB[ti]+=p[2]*w; accW[ti]+=w;
+      }
+    }
+    for (let oy=y0; oy<y1; oy++) for (let ox=0; ox<ow; ox++) {
+      const ti=(oy-y0)*ow+ox, oi=(oy*ow+ox)*4;
+      const w = accW[ti] || 1;
+      out[oi]=accR[ti]/w; out[oi+1]=accG[ti]/w; out[oi+2]=accB[ti]/w; out[oi+3]=255;
+    }
+    self.postMessage({type:'progress', phase:'merge', value:y1/oh});
+  }
+  self.postMessage({type:'done', data:out, width:ow, height:oh}, [out.buffer]);
+};
+`;
+
+let mergeWorkerURL = null;
+function getMergeWorker() {
+  if (!mergeWorkerURL) mergeWorkerURL = URL.createObjectURL(new Blob([MERGE_WORKER_SRC], {type: 'text/javascript'}));
+  return new Worker(mergeWorkerURL);
+}
+
+function captureBurst(n, maxLong, onProgress) {
+  return new Promise((resolve) => {
+    const frames = [];
+    const vw = video.videoWidth, vh = video.videoHeight;
+    const k = Math.min(1, maxLong / Math.max(vw, vh));
+    const w = Math.round(vw * k), h = Math.round(vh * k);
+    let i = 0;
+    const grab = () => {
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(video, 0, 0, w, h);
+      const id = ctx.getImageData(0, 0, w, h);
+      frames.push({data: id.data, width: w, height: h});
+      i++;
+      onProgress?.(i, n);
+      if (i < n) requestAnimationFrame(grab);
+      else resolve(frames);
+    };
+    requestAnimationFrame(grab);
+  });
+}
+
+function mergeFrames(frames, scale, onProgress) {
+  return new Promise((resolve, reject) => {
+    const w = getMergeWorker();
+    w.onmessage = (e) => {
+      const m = e.data;
+      if (m.type === 'progress') onProgress?.(m);
+      else if (m.type === 'done') { w.terminate(); resolve(m); }
+    };
+    w.onerror = (err) => { w.terminate(); reject(err); };
+    const msg = frames.map(f => ({data: f.data, width: f.width, height: f.height}));
+    const transfer = frames.map(f => f.data.buffer);
+    w.postMessage({frames: msg, width: frames[0].width, height: frames[0].height, scale}, transfer);
+  });
+}
+
+async function captureUltra() {
+  if (busy) return;
+  busy = true;
+  try {
+    if (state.timerSec > 0) await countdown(state.timerSec);
+    const scale = 2;
+    const n = state.burst;
+    showHint(`Hold steady — capturing ${n} frames`);
+    const frames = await captureBurst(n, 1080, (i, total) => {
+      showHint(`Capturing ${i}/${total}`);
+    });
+    if (frames.length < 2) { showHint('Burst failed — try again'); busy = false; return; }
+    showHint('Merging frames…');
+    const result = await mergeFrames(frames, scale, (p) => {
+      showHint(p.phase === 'align' ? `Aligning ${Math.round(p.value * 100)}%` : `Merging ${Math.round(p.value * 100)}%`);
+    });
+    const c = document.createElement('canvas');
+    c.width = result.width; c.height = result.height;
+    const ctx = c.getContext('2d');
+    ctx.putImageData(new ImageData(result.data, result.width, result.height), 0, 0);
+    let blob;
+    if (isIdentity()) {
+      blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.96));
+    } else {
+      glCanvas.width = result.width; glCanvas.height = result.height;
+      drawGraded(c);
+      blob = await new Promise(r => glCanvas.toBlob(r, 'image/jpeg', 0.96));
+      resizeCanvas();
+    }
+    saveBlob(blob, `CAMPRO_ULTRA_${Date.now()}.jpg`, 'image');
+    showHint(`Ultra 4K — ${result.width}×${result.height}`);
+  } catch (e) {
+    console.error(e);
+    showHint('Ultra capture failed: ' + e.message);
+  } finally {
+    busy = false;
+  }
+}
+
+async function captureNight() {
+  if (busy) return;
+  busy = true;
+  try {
+    if (state.timerSec > 0) await countdown(state.timerSec);
+    const n = Math.min(20, state.burst + 4);
+    showHint(`Hold steady — night mode, ${n} frames`);
+    const frames = await captureBurst(n, 1440, (i, total) => showHint(`Capturing ${i}/${total}`));
+    if (frames.length < 2) { showHint('Burst failed'); busy = false; return; }
+    showHint('Denoising…');
+    const result = await mergeFrames(frames, 1, (p) => showHint(`Merging ${Math.round(p.value * 100)}%`));
+    const c = document.createElement('canvas');
+    c.width = result.width; c.height = result.height;
+    c.getContext('2d').putImageData(new ImageData(result.data, result.width, result.height), 0, 0);
+    let blob;
+    if (isIdentity()) blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.96));
+    else {
+      glCanvas.width = result.width; glCanvas.height = result.height;
+      drawGraded(c);
+      blob = await new Promise(r => glCanvas.toBlob(r, 'image/jpeg', 0.96));
+      resizeCanvas();
+    }
+    saveBlob(blob, `CAMPRO_NIGHT_${Date.now()}.jpg`, 'image');
+    showHint('Night shot saved');
+  } catch (e) {
+    console.error(e);
+    showHint('Night capture failed: ' + e.message);
+  } finally {
+    busy = false;
+  }
+}
+
+/* ---------- countdown ---------- */
+function countdown(sec) {
+  return new Promise((resolve) => {
+    const el = $('#count');
+    let n = sec;
+    el.textContent = n;
+    el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+    const t = setInterval(() => {
+      n--;
+      if (n <= 0) { clearInterval(t); el.textContent = ''; resolve(); return; }
+      el.textContent = n;
+      el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+    }, 1000);
+  });
+}
+
+/* ---------- save ---------- */
+function saveBlob(blob, name, kind) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  lastCap = {url, blob, name, kind};
+  thumb.classList.add('on');
+  thumb.style.backgroundImage = kind === 'image' ? `url(${url})` : 'none';
+  showHint(kind === 'image' ? 'Photo saved' : 'Video saved');
+}
+
+/* ---------- errors / hints ---------- */
+let hintTimer = 0;
+function showHint(text, ms = 2200) {
+  hint.textContent = text;
+  hint.classList.add('on');
+  clearTimeout(hintTimer);
+  hintTimer = setTimeout(() => hint.classList.remove('on'), ms);
+}
+function setErr(text) {
+  errEl.querySelector('pre').textContent = text;
+  errEl.classList.add('on');
+}
+
+/* ---------- panel helpers ---------- */
+function makePanel(rootId, paramsGetter) {
+  const root = $('#' + rootId);
+  root.innerHTML = '<i class="grab"></i><div class="pchips"></div><div class="pread"><b></b><small></small></div><div class="rwrap"><div class="ruler"><div class="rtrack"></div></div><i class="needle"></i></div>';
+  const chips = root.querySelector('.pchips');
+  const big = root.querySelector('.pread b');
+  const small = root.querySelector('.pread small');
+  const ruler = root.querySelector('.ruler');
+  const track = root.querySelector('.rtrack');
+  const RANGE = 900;
+  let params = [], cur = 0, lock = false, lastTick = 0;
+
+  const frac = p => (p.get() - p.min) / (p.max - p.min);
+  const size = () => {
+    track.style.width = (ruler.clientWidth + RANGE) + 'px';
+    track.style.setProperty('--off', ruler.clientWidth / 2 + 'px');
+  };
+  function paint() {
+    const p = params[cur]; if (!p) return;
+    big.textContent = p.fmt(p.get());
+    small.textContent = p.label;
+    chips.querySelectorAll('button').forEach((b, i) => {
+      b.classList.toggle('sel', i === cur);
+      const sub = b.querySelector('i');
+      if (sub) sub.textContent = params[i].fmt(params[i].get());
+      b.classList.toggle('mod', Math.abs(params[i].get() - params[i].def) > 1e-6);
+    });
+  }
+  function seek() {
+    const p = params[cur]; if (!p) return;
+    lock = true; ruler.scrollLeft = frac(p) * RANGE;
+    requestAnimationFrame(() => lock = false);
+  }
+  function rebuild() {
+    params = paramsGetter();
+    cur = Math.min(cur, Math.max(0, params.length - 1));
+    chips.innerHTML = '';
+    params.forEach((p, i) => {
+      const b = document.createElement('button');
+      b.innerHTML = `${p.label}<i></i>`;
+      b.onclick = () => { cur = i; paint(); seek(); };
+      chips.appendChild(b);
+    });
+    chips.style.display = params.length > 1 ? '' : 'none';
+    size(); paint(); seek();
   }
   ruler.addEventListener('scroll', () => {
-    if (lock) return; const p = params[cur]; if (!p) return;
+    if (lock) return;
+    const p = params[cur]; if (!p) return;
     let v = p.min + ruler.scrollLeft / RANGE * (p.max - p.min);
     v = Math.min(p.max, Math.max(p.min, +(Math.round(v / p.step) * p.step).toFixed(6)));
-    if (v === p.get()) return; p.set(v); paint();
-    const now = performance.now(); if (now - lastTick > 45){ lastTick = now; navigator.vibrate && navigator.vibrate(3); }
+    if (v === p.get()) return;
+    p.set(v); paint();
+    const now = performance.now();
+    if (now - lastTick > 45) { lastTick = now; navigator.vibrate?.(3); }
   });
-  ruler.addEventListener('dblclick', () => { const p = params[cur]; if (p){ p.set(p.def); paint(); seek(); } });
+  ruler.addEventListener('dblclick', () => { const p = params[cur]; if (p) { p.set(p.def); paint(); seek(); } });
   new ResizeObserver(() => { size(); seek(); }).observe(ruler);
   rebuild();
-  return {rebuild, refresh(){ paint(); seek(); }};
+  return {rebuild, refresh() { paint(); seek(); }};
 }
+
 const sgn = (v, d = 2) => (v > 0 ? '+' : '') + v.toFixed(d);
-const GFMT = {exposure: v => sgn(v) + ' EV', contrast: v => v.toFixed(2) + '×', saturation: v => v.toFixed(2) + '×', vignette: v => Math.round(v*100) + '%'};
-const ppGrade = ParamPanel($('ppGrade'), () => ROWS.map(([k, label, min, max, step]) => ({id:k, label, min, max, step, def:DEFAULT[k], get:() => G[k], set:v => { G[k] = v; }, fmt:GFMT[k] || sgn})));
-function setGrade(o){ Object.assign(G, DEFAULT, o); ppGrade.refresh(); }
-Object.keys(PRESETS).forEach(n => { const b = document.createElement('button'); b.textContent = n; b.onclick = () => setGrade(PRESETS[n]); $('presets').appendChild(b); });
-$('resetGrade').onclick = () => setGrade({});
-document.addEventListener('click', e => {            // small jump on every button press
-  const b = e.target.closest('button'); if (!b) return;
-  b.classList.remove('jump'); void b.offsetWidth; b.classList.add('jump');
-});
-document.addEventListener('animationend', e => e.target.classList && e.target.classList.remove('jump'));
-$('flip').onclick = () => bgMat.uniforms.uFlip.value = 1 - bgMat.uniforms.uFlip.value;
+const GFMT = {
+  exposure: v => sgn(v) + ' EV',
+  contrast: v => v.toFixed(2) + '×',
+  saturation: v => v.toFixed(2) + '×',
+  vignette: v => Math.round(v * 100) + '%',
+  temp: v => sgn(v),
+  tint: v => sgn(v),
+  highlights: v => sgn(v),
+  shadows: v => sgn(v)
+};
 
-function toggle(p, btn){ const on = !$(p).classList.contains('on');
-  ['pLook','pGrade','pPro','pSmart','pCar'].forEach(x => $(x).classList.remove('on')); ['bLook','bGrade','bPro','bSmart','bCar'].forEach(x => $(x).classList.remove('act'));
-  if (on){ $(p).classList.add('on'); btn.classList.add('act'); ({pGrade:ppGrade, pPro:ppPro, pLook:ppLook, pCar:ppCar})[p]?.rebuild(); } }
-$('bGrade').onclick = e => toggle('pGrade', e.currentTarget);
-$('bCar').onclick = e => toggle('pCar', e.currentTarget);
-$('rot').oninput = e => { yaw.rotation.y = THREE.MathUtils.degToRad(+e.target.value); e.target.nextElementSibling.textContent = e.target.value + '°'; };
-$('scl').oninput = e => { stage.scale.setScalar(+e.target.value); e.target.nextElementSibling.textContent = (+e.target.value).toFixed(2) + '×'; };
-$('replace').onclick = () => { placed = false; anchor = null; stage.visible = false; $('pCar').classList.remove('on'); $('bCar').classList.remove('act');
-  $('hint').classList.remove('off'); $('hint').textContent = 'Move your phone to find the ground'; };
-$('dist').oninput = e => { liteDist = +e.target.value; e.target.nextElementSibling.textContent = liteDist.toFixed(2) + '×'; };
-/* ---------- Error panel (stays on screen until dismissed) ---------- */
-const errLines = [];
-function showErr(m){ errLines.push(String(m).slice(0, 400)); if (errLines.length > 6) errLines.shift();
-  $('err').querySelector('pre').textContent = `[mode=${typeof startMode !== 'undefined' ? startMode : '?'} arOn=${typeof arOn !== 'undefined' && arOn} w8=${w8}]\n` + errLines.join('\n'); $('err').classList.add('on'); }
-addEventListener('error', e => showErr(e.message + (e.filename ? '\n' + e.filename.split('/').pop() + ':' + e.lineno : '')));
-addEventListener('unhandledrejection', e => showErr(String((e.reason && (e.reason.stack || e.reason.message)) || e.reason)));
-{ const ce = console.error.bind(console); console.error = (...a) => { ce(...a); try { showErr(a.map(x => (x && x.message) || (typeof x === 'object' ? JSON.stringify(x) : String(x))).join(' ')); } catch(_){} }; }
-{ const cw = console.warn.bind(console); console.warn = (...a) => { cw(...a); const t = a.map(String).join(' '); if (/^\[XR/.test(t)) showErr(t); }; }
-$('errX').onclick = () => { errLines.length = 0; $('err').classList.remove('on'); };
-$('errCopy').onclick = () => navigator.clipboard && navigator.clipboard.writeText($('err').querySelector('pre').textContent);
+const ADJ_ROWS = [
+  ['exposure', 'Exposure', -2, 2, .05],
+  ['contrast', 'Contrast', .6, 1.5, .01],
+  ['saturation', 'Saturation', 0, 2, .01],
+  ['temp', 'Temperature', -1, 1, .01],
+  ['tint', 'Tint', -1, 1, .01],
+  ['highlights', 'Highlights', -1, 1, .01],
+  ['shadows', 'Shadows', -1, 1, .01],
+  ['vignette', 'Vignette', 0, 1, .01]
+];
 
-document.querySelectorAll('.panel').forEach(p => {   // grab handle: drag down to close
-  const g = document.createElement('i'); g.className = 'grab'; p.prepend(g); let y0 = null;
-  g.addEventListener('pointerdown', e => { y0 = e.clientY; g.setPointerCapture(e.pointerId); p.style.transition = 'none'; });
-  g.addEventListener('pointermove', e => { if (y0 != null) p.style.transform = `translateY(${Math.max(0, e.clientY - y0)}px)`; });
-  const end = e => { if (y0 == null) return; const dy = e.clientY - y0; y0 = null; p.style.transition = ''; p.style.transform = '';
-    if (dy > 60){ p.classList.remove('on'); document.querySelectorAll('#dock .chip').forEach(c => c.classList.remove('act')); } };
-  g.addEventListener('pointerup', end); g.addEventListener('pointercancel', end);
-});
+const ppAdjust = makePanel('pAdjust', () =>
+  ADJ_ROWS.map(([k, label, min, max, step]) => ({
+    id: k, label, min, max, step, def: DEFAULT_G[k],
+    get: () => G[k], set: v => { G[k] = v; }, fmt: GFMT[k]
+  }))
+);
 
-/* ---------- Camera app ---------- */
-let carRot = 0, carScl = 1;
-let arOn = false, vidMode = false, timerSec = 0, facing = 'environment', resIdx = 1, track = null, caps = {}, camStream = null, busy = false, lastHist = 0, torch = false;
-const assists = {peak:false, zebra:false, hist:true};
-const RES = [[1280,720,'HD'],[1920,1080,'FHD'],[3840,2160,'4K']];
-const ppCar = ParamPanel($('ppCar'), () => [
-  {id:'rot', label:'Rotate', min:-180, max:180, step:1, def:0, get:() => carRot, set:v => { carRot = v; yaw.rotation.y = THREE.MathUtils.degToRad(v); }, fmt:v => Math.round(v) + '°'},
-  {id:'scl', label:'Size', min:.3, max:2, step:.01, def:1, get:() => carScl, set:v => { carScl = v; stage.scale.setScalar(v); }, fmt:v => v.toFixed(2) + '×'},
-  ...(lite && arOn ? [{id:'dist', label:'Distance', min:.5, max:2, step:.01, def:1, get:() => liteDist, set:v => { liteDist = v; }, fmt:v => v.toFixed(2) + '×'}] : [])]);
-const sleep = ms => new Promise(r => setTimeout(r, ms));
-const setCap = async c => { try { await track.applyConstraints({advanced:[c]}); return true; } catch(e){ return false; } };
-const toast = t => { const h = $('hint'); h.textContent = t; h.classList.remove('off'); clearTimeout(toast.t); toast.t = setTimeout(() => h.classList.add('off'), 3200); };
-
-async function startCam(){
-  stopCam();
-  const [rw, rh] = RES[resIdx];
-  try { camStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing}, width:{ideal:rw}, height:{ideal:rh}}, audio:false}); }
-  catch(e){ $('ui').classList.add('on'); toast('Camera access is needed. Allow it in the browser and reload.'); return; }
-  video = $('pv'); video.srcObject = camStream; video.classList.toggle('mirror', facing === 'user'); await video.play();
-  vtex = new THREE.VideoTexture(video); bgMat.uniforms.tCam.value = ptex; bgMat.uniforms.uFlip.value = 0;
-  track = camStream.getVideoTracks()[0]; caps = track.getCapabilities ? track.getCapabilities() : {};
-  buildPro(); torch = false; $('bFlash').classList.remove('act');
-  if (!window.DeviceOrientationEvent || !DeviceOrientationEvent.requestPermission) addEventListener('deviceorientation', onOrient);
-  rtScene.dispose(); rtScene.samples = arOn ? 4 : 0;
-  lite = true; hasCam = true;
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5)); renderer.setSize(innerWidth, innerHeight);
-  Object.assign(renderer.domElement.style, {display:'block', position:'fixed', inset:'0', width:'100%', height:'100%', zIndex:'0'});
-  $('ui').classList.add('on'); $('ui').classList.remove('arx');
-  $('shutter').style.opacity = $('bGrade').style.opacity = ''; delete $('bar').dataset.nocam;
-}
-function stopCam(){ lite = false; camStream && camStream.getTracks().forEach(t => t.stop()); camStream = null; if (video) video.style.display = 'none'; }
-
-/* preview source: a small copy of the camera, so grading a 4K stream costs the same as grading 720p */
-const pcan = document.createElement('canvas'), pctx = pcan.getContext('2d');
-const ptex = new THREE.CanvasTexture(pcan); ptex.generateMipmaps = false; ptex.minFilter = THREE.LinearFilter;
-let vtex = null, nativeRec = false;
-function syncPreview(){
-  const vw = video.videoWidth, vh = video.videoHeight; if (!vw) return;
-  const k = Math.min(1, (smart.face ? 1920 : 1280) / Math.max(vw, vh)), w = Math.round(vw*k), h = Math.round(vh*k);
-  if (pcan.width !== w || pcan.height !== h){ pcan.width = w; pcan.height = h; ptex.dispose(); }
-  pctx.drawImage(video, 0, 0, w, h); ptex.needsUpdate = true;
-}
-const isIdentity = () => nativeRec || (!smart.face && !smart.stab && !lutOn && !assists.peak && !assists.zebra && !bgMat.uniforms.uFlip.value &&
-  G.exposure === 0 && G.contrast === 1 && G.saturation === 1 && G.temp === 0 && G.tint === 0 && G.highlights === 0 && G.shadows === 0 && G.vignette === 0);
-
-/* photo: the sensor's full-resolution still (ImageCapture), independent of the preview stream */
-async function takePhoto(){
-  let blob = null;
-  try {
-    if (window.ImageCapture && track){
-      const ic = new ImageCapture(track), pc = await ic.getPhotoCapabilities(), opt = {};
-      if (pc.imageWidth && pc.imageHeight){
-        const k = Math.min(1, renderer.capabilities.maxTextureSize / Math.max(pc.imageWidth.max, pc.imageHeight.max));
-        opt.imageWidth = Math.floor(pc.imageWidth.max * k); opt.imageHeight = Math.floor(pc.imageHeight.max * k);
-      }
-      if (torch && (pc.fillLightMode || []).includes('flash')) opt.fillLightMode = 'flash';
-      blob = await ic.takePhoto(opt);
-    }
-  } catch(e){ blob = null; }
-  if (!blob){ wantPhoto = true; return; }
-  if (isIdentity()){ saveBlob(blob, `IMG_${Date.now()}.jpg`); return; }
-  const bmp = await createImageBitmap(blob, {imageOrientation:'from-image'});
-  const out = await gradeBitmap(bmp);
-  saveBlob(out || blob, `IMG_${Date.now()}.jpg`);
-}
-async function gradeBitmap(bmp){
-  const U = gradeMat.uniforms, t = new THREE.Texture(bmp);
-  t.flipY = false; t.generateMipmaps = false; t.minFilter = t.magFilter = THREE.LinearFilter; t.needsUpdate = true;
-  const dpr = renderer.getPixelRatio();
-  U.tScene.value = t; U.uSrgb.value = 1; applyGrade(); U.uAssist.value = 0;
-  const z = lastWin.z, m = (1 - 1/z)/2;                          // same face-lock / stabilizer window as the preview
-  U.uSrc.value.set((facing === 'user' ? -1 : 1)/z, 1/z, 1); U.uPan.value.set(Math.max(-m, Math.min(m, lastWin.px)), Math.max(-m, Math.min(m, lastWin.py)));   // bitmaps arrive unflipped
-  U.uTexel.value.set(1/bmp.width, 1/bmp.height);
-  renderer.setPixelRatio(1); renderer.setSize(bmp.width, bmp.height, false);
-  renderer.setRenderTarget(null); renderer.render(quadScene, quadCam);
-  const out = await new Promise(r => renderer.domElement.toBlob(r, 'image/jpeg', .95));   // snapshot is taken here
-  renderer.setPixelRatio(dpr); renderer.setSize(innerWidth, innerHeight, false);
-  t.dispose(); bmp.close(); return out;
-}
-
-/* pro controls (only what the browser/camera exposes) */
+/* Pro panel */
 let proList = [];
-function buildPro(){
-  proList = []; const st = track.getSettings();
+const ppPro = makePanel('pPro', () => proList);
+
+async function buildPro() {
+  proList = [];
+  if (!videoTrack) { ppPro.rebuild(); return; }
+  const caps = videoTrack.getCapabilities?.() || {};
+  const st = videoTrack.getSettings?.() || {};
   const add = (key, label, fmt, extra) => {
-    const c = caps[key]; if (!c || c.max == null) return;
-    let val = st[key] ?? c.min; const def = key === 'zoom' ? c.min : val;
-    proList.push({id:key, label, min:c.min, max:c.max, step:c.step || (c.max - c.min)/100, def, get:() => val, set:v => { val = v; setCap({...extra, [key]: v}); }, fmt});
+    const c = caps[key];
+    if (!c || c.max == null) return;
+    let val = st[key] ?? c.min;
+    const def = key === 'zoom' ? c.min : val;
+    proList.push({id: key, label, min: c.min, max: c.max,
+      step: c.step || (c.max - c.min) / 100, def,
+      get: () => val, set: v => {
+        val = v;
+        videoTrack.applyConstraints({advanced: [{...extra, [key]: v}]}).catch(()=>{});
+      }, fmt});
   };
-  add('zoom','Zoom', v => v.toFixed(1)+'×', {});
-  add('exposureCompensation','EV', v => sgn(v, 1), {});
-  add('iso','ISO', v => Math.round(v), {exposureMode:'manual'});
-  add('exposureTime','Shutter', v => '1/' + Math.round(1e4 / v), {exposureMode:'manual'});
-  add('focusDistance','Focus', v => v.toFixed(2)+' m', {focusMode:'manual'});
-  add('colorTemperature','WB', v => Math.round(v)+'K', {whiteBalanceMode:'manual'});
-  $('proNote').hidden = proList.length > 0; $('bFlash').style.opacity = caps.torch ? '' : .4;
-  if (typeof ppPro !== 'undefined') ppPro.rebuild();
-}
-const ppPro = ParamPanel($('ppPro'), () => proList);
-$('aAuto').onclick = async () => { await setCap({exposureMode:'continuous', focusMode:'continuous', whiteBalanceMode:'continuous'}); buildPro(); };
-const assistBtn = (id, key) => $(id).onclick = e => {
-  assists[key] = !assists[key]; e.currentTarget.classList.toggle('sel', assists[key]);
-  gradeMat.uniforms.uPeak.value = +assists.peak; gradeMat.uniforms.uZebra.value = +assists.zebra; $('hist').style.opacity = assists.hist ? 1 : 0;
-};
-assistBtn('aPeak','peak'); assistBtn('aZebra','zebra'); assistBtn('aHist','hist');
-
-/* tap to focus + pinch to zoom */
-const pts = new Map(); let pd0 = 0, z0 = 1, pinched = false;
-const cv = renderer.domElement, dist2 = () => { const [a,b] = [...pts.values()]; return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY); };
-cv.addEventListener('pointerdown', e => { pts.set(e.pointerId, e); if (pts.size === 2){ pinched = true; pd0 = dist2(); z0 = (track && track.getSettings().zoom) || 1; } });
-cv.addEventListener('pointermove', e => { if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, e);
-  if (pts.size === 2 && caps.zoom) setCap({zoom: Math.min(caps.zoom.max, Math.max(caps.zoom.min, z0 * dist2() / pd0))}); });
-const endPtr = e => { pts.delete(e.pointerId); if (!pts.size){ const was = pinched; pinched = false; if (!was && lite && !arOn && e.type === 'pointerup') focusAt(e); } };
-cv.addEventListener('pointerup', endPtr); cv.addEventListener('pointercancel', endPtr);
-function focusAt(e){
-  const r = $('focusRing'); r.style.left = e.clientX + 'px'; r.style.top = e.clientY + 'px';
-  r.classList.remove('show'); void r.offsetWidth; r.classList.add('show');
-  const poi = {pointsOfInterest:[{x:e.clientX/innerWidth, y:e.clientY/innerHeight}]};
-  if (track) setCap((caps.focusMode || []).includes('single-shot') ? {focusMode:'single-shot', ...poi} : poi);
-}
-
-/* histogram + level */
-const hs = document.createElement('canvas'); hs.width = 64; hs.height = 36;
-const hctx = hs.getContext('2d', {willReadFrequently:true}), hc = $('hist'), hg = hc.getContext('2d');
-function drawHist(){
-  hctx.drawImage(video, 0, 0, 64, 36);
-  const d = hctx.getImageData(0, 0, 64, 36).data, bins = new Array(32).fill(0);
-  for (let i = 0; i < d.length; i += 4) bins[Math.min(31, ((.2126*d[i] + .7152*d[i+1] + .0722*d[i+2]) / 256 * 32) | 0)]++;
-  const mx = Math.max(...bins); hg.clearRect(0, 0, 84, 36); hg.fillStyle = '#f1f1ee';
-  bins.forEach((v, i) => { const h = v / mx * 28; hg.fillRect(4 + i*2.4, 33 - h, 1.8, h); });
-}
-function updateLevel(){
-  const lv = $('level'), up = orient && orient.beta > 55 && orient.beta < 125 && !((screen.orientation && screen.orientation.angle) || 0);
-  if (!up){ lv.style.opacity = 0; return; }
-  lv.style.opacity = 1; lv.style.transform = `translate(-50%,-50%) rotate(${-orient.gamma}deg)`; lv.classList.toggle('ok', Math.abs(orient.gamma) < 1.2);
-}
-
-/* LUT looks: built-in (generated 3D LUTs) + .cube import */
-const lum3 = c => .2126*c[0] + .7152*c[1] + .0722*c[2];
-const sat = (c, k) => { const l = lum3(c); return c.map(v => l + (v - l)*k); };
-const con = (c, k) => c.map(v => (v - .5)*k + .5);
-const split = (c, sh, hi) => { const l = lum3(c); return c.map((v, i) => v + sh[i]*(1-l)*(1-l) + hi[i]*l*l); };
-const LOOKS = {
-  Natural: null,
-  Portrait: c => split(sat(con(c,1.04),.94), [0,0,.012], [.03,.012,-.012]),
-  Vivid: c => con(sat(c,1.4), 1.08),
-  Cinematic: c => split(con(sat(c,.9),1.12), [-.03,.012,.045], [.055,.012,-.05]),
-  Film: c => split(sat(con(c,.9).map(v => v*.93 + .045), .85), [0,.01,.02], [.03,.012,-.01]),
-  Chrome: c => split(con(sat(c,1.12),1.16), [-.02,0,.03], [.025,.02,0]),
-  Faded: c => sat(c,.8).map(v => v*.82 + .1),
-  Noir: c => { const v = Math.min(1, Math.max(0, (lum3(c) - .04)*1.12)), k = v*v*(3 - 2*v); return [k,k,k]; }
-};
-function lutTexture(n, d){ const t = new THREE.DataTexture(d, n*n, n, THREE.RGBAFormat); t.minFilter = t.magFilter = THREE.LinearFilter; t.generateMipmaps = false; t.needsUpdate = true; return t; }
-const put = (d, n, r, g, b, o) => { const i = (g*n*n + b*n + r)*4; for (let k = 0; k < 3; k++) d[i+k] = Math.round(Math.min(1, Math.max(0, o[k]))*255); d[i+3] = 255; };
-function buildLut(fn, n = 17){ const d = new Uint8Array(n*n*n*4);
-  for (let b = 0; b < n; b++) for (let g = 0; g < n; g++) for (let r = 0; r < n; r++) put(d, n, r, g, b, fn([r/(n-1), g/(n-1), b/(n-1)]));
-  return {n, tex: lutTexture(n, d)}; }
-function parseCube(text){
-  let n = 0; const vals = [];
-  for (const line of text.split(/\r?\n/)){ const t = line.trim(); if (!t || t[0] === '#') continue;
-    if (t.startsWith('LUT_3D_SIZE')) n = +t.split(/\s+/)[1];
-    else if (/^[-\d.]/.test(t)){ const q = t.split(/\s+/).map(Number); if (q.length >= 3) vals.push(q); } }
-  if (!n || vals.length !== n*n*n) throw new Error('Unsupported .cube: needs a 3D LUT');
-  const d = new Uint8Array(n*n*n*4);
-  vals.forEach((q, i) => put(d, n, i % n, Math.floor(i/n) % n, Math.floor(i/(n*n)), q));
-  const fn = c => vals[Math.round(c[0]*(n-1)) + Math.round(c[1]*(n-1))*n + Math.round(c[2]*(n-1))*n*n] || c;
-  return {n, tex: lutTexture(n, d), fn};
-}
-gradeMat.uniforms.tLut.value = lutTexture(2, new Uint8Array(2*2*2*4));
-let lutOn = false, lutAmt = 1;
-const hsl = (h, s, l) => { const a = s*Math.min(l, 1-l), f = n => { const k = (n + h/30) % 12; return l - a*Math.max(-1, Math.min(k-3, 9-k, 1)); }; return [f(0), f(8), f(4)]; };
-function swatch(fn){                                   // colour chart run through the look, so each card previews the real result
-  const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'), im = g.createImageData(64, 64);
-  for (let y = 0; y < 64; y++) for (let x = 0; x < 64; x++){
-    const rgb = y < 42 ? hsl(x/64*360, .7, .66 - y/42*.36) : [x/63, x/63, x/63], o = fn ? fn(rgb) : rgb, i = (y*64 + x)*4;
-    for (let k = 0; k < 3; k++) im.data[i+k] = Math.round(Math.min(1, Math.max(0, o[k]))*255); im.data[i+3] = 255;
+  add('zoom', 'Zoom', v => v.toFixed(1) + '×');
+  add('exposureCompensation', 'EV', v => sgn(v, 1));
+  add('iso', 'ISO', v => Math.round(v), {exposureMode: 'manual'});
+  add('exposureTime', 'Shutter', v => '1/' + Math.round(1e4 / v), {exposureMode: 'manual'});
+  add('focusDistance', 'Focus', v => v.toFixed(2) + ' m', {focusMode: 'manual'});
+  add('colorTemperature', 'WB', v => Math.round(v) + 'K', {whiteBalanceMode: 'manual'});
+  if (!proList.length) {
+    proList = [{id: 'na', label: 'Info', min: 0, max: 1, step: 1, def: 0,
+      get: () => 0, set: () => {}, fmt: () => 'N/A'}];
   }
-  g.putImageData(im, 0, 0); return c;
+  ppPro.rebuild();
 }
-function addLook(name, make, fn){
-  const b = document.createElement('button'); b.className = 'look';
-  b.append(swatch(fn), Object.assign(document.createElement('span'), {textContent:name}));
-  b.onclick = () => {
-    $('looks').querySelectorAll('.look').forEach(x => x.classList.toggle('sel', x === b));
-    b.scrollIntoView({inline:'center', block:'nearest', behavior:'smooth'});
-    const u = gradeMat.uniforms;
-    if (!make){ u.uLut.value = 0; lutOn = false; return; }
-    const r = make(); u.tLut.value = r.tex; u.uLutSize.value = r.n; u.uLut.value = lutAmt; lutOn = true;
-  };
-  $('looks').appendChild(b); return b;
-}
-Object.entries(LOOKS).forEach(([n, f]) => addLook(n, f && (() => buildLut(f)), f || null));
-$('looks').firstChild.classList.add('sel');
-const ppLook = ParamPanel($('ppLook'), () => [{id:'amt', label:'Strength', min:0, max:1, step:.01, def:1, get:() => lutAmt, set:v => { lutAmt = v; if (lutOn) gradeMat.uniforms.uLut.value = v; }, fmt:v => Math.round(v*100) + '%'}]);
-$('impLut').onclick = () => $('lutFile').click();
-$('lutFile').onchange = async e => {
-  const f = e.target.files[0]; if (!f) return;
-  try { const r = parseCube(await f.text()); addLook(f.name.replace(/\.cube$/i, ''), () => r, r.fn).click(); } catch(err){ toast(err.message); }
-  e.target.value = '';
-};
 
-/* top bar + shutter */
-$('bFlash').onclick = async e => { if (!caps.torch) return; torch = !torch; if (await setCap({torch})) e.currentTarget.classList.toggle('act', torch); else torch = !torch; };
-function clockTo(sec){                              // hand points at the matching clock number (3s -> 3 o'clock), arc fills with it
-  const c = $('bTimer').querySelector('svg'); c.style.setProperty('--a', sec * 30 + 'deg'); c.style.setProperty('--p', sec / 12 * 100);
-}
-const timerLabel = () => $('bTimer').querySelector('b').textContent = timerSec ? timerSec + 's' : 'Off';
-$('bTimer').onclick = e => { timerSec = timerSec === 0 ? 3 : timerSec === 3 ? 10 : 0; timerLabel(); clockTo(timerSec); e.currentTarget.classList.toggle('act', !!timerSec); };
-$('bGrid').onclick = e => { $('grid').classList.toggle('on'); e.currentTarget.classList.toggle('act'); };
-$('bRes').onclick = e => { resIdx = (resIdx + 1) % RES.length; e.currentTarget.textContent = RES[resIdx][2]; startCam(); };
-$('bFlip').onclick = () => { facing = facing === 'user' ? 'environment' : 'user'; startCam(); };
-$('bLook').onclick = e => toggle('pLook', e.currentTarget);
-$('bPro').onclick = e => toggle('pPro', e.currentTarget);
-$('bSmart').onclick = e => toggle('pSmart', e.currentTarget);
-document.querySelectorAll('#modes button').forEach(b => b.onclick = () => {
-  vidMode = b.dataset.m === 'video'; $('ui').classList.toggle('vid', vidMode); $('modes').style.setProperty('--i', vidMode ? 1 : 0);
-  document.querySelectorAll('#modes button').forEach(x => x.classList.toggle('sel', x === b));
-});
-async function countdown(){
-  if (timerSec){ const sh = $('shutter'); sh.style.setProperty('--dur', timerSec + 's'); sh.classList.add('cd'); }
-  for (let i = timerSec; i > 0; i--){ clockTo(i); $('bTimer').querySelector('b').textContent = i + 's'; const c = $('count'); c.textContent = i; c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop'); await sleep(1000); }
-  $('count').textContent = ''; clockTo(timerSec); timerLabel(); $('shutter').classList.remove('cd');
-}
-$('shutter').onclick = async () => {
-  if (!hasCam || busy) return;
-  const sh = $('shutter'); sh.classList.remove('snap'); void sh.offsetWidth; sh.classList.add('snap');
-  if (vidMode && recording){ stopRec(); return; }
-  busy = true; await countdown(); busy = false;
-  if (vidMode) startRec();
-  else {
-    const f = $('shot'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go');
-    if (lite && !arOn){ busy = true; try { await takePhoto(); } catch(e){ toast('Photo failed: ' + e.message); wantPhoto = true; } busy = false; }
-    else wantPhoto = true;
-  }
-};
-
-/* AR switch (optional) */
-async function enterAR(){
-  toast('Loading AR…');
-  try {
-    await loadModel();
-    if (startMode === 'xr'){ stopCam(); $('ui').classList.add('ar','arx'); rtScene.dispose(); rtScene.samples = 4; await startAR(); }
-    else if (startMode === 'w8'){
-      try { engineReady = engineReady || loadEngine(); await engineReady; } catch(e){ startMode = 'lite'; return enterAR(); }
-      stopCam(); $('ui').classList.add('ar','arx'); await startW8();
-    } else {
-      if (window.DeviceOrientationEvent && DeviceOrientationEvent.requestPermission && await DeviceOrientationEvent.requestPermission() !== 'granted') throw new Error('Motion access was denied');
-      addEventListener('deviceorientation', onOrient);
-      scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), .04).texture;
-      arOn = true; placed = false; stage.visible = false; $('ui').classList.add('ar'); $('rowDist').hidden = false;
-      rtScene.dispose(); rtScene.samples = 4;
-      toast('Aim at the ground and tap to park the car');
-    }
-  } catch(e){
-    $('arSw').checked = false; $('ui').classList.remove('ar','arx'); arOn = false; toast('AR unavailable: ' + e.message);
-    if (!lite) startCam();
-  }
-}
-function leaveAR(){
-  if (session) return session.end();                    // onEnd restarts the camera
-  if (w8) return location.reload();
-  arOn = false; placed = false; stage.visible = false; scene.environment = null;
-  $('ui').classList.remove('ar'); $('rowDist').hidden = true; $('pCar').classList.remove('on'); $('bCar').classList.remove('act');
-  rtScene.dispose(); rtScene.samples = 0; $('hint').classList.add('off');
-}
-$('arSw').onchange = e => e.target.checked ? enterAR() : leaveAR();
-
-/* ---------- Smart: face lock, face focus, stabilizer, AE/AF lock ---------- */
-const smart = {face:false, focus:false, stab:false, lock:false};
-let detector = null, detLoading = null, faceCur = null, lastFaceT = 0, lastDet = 0, lastPoi = 0, lastStat = 0, lastFrameT = performance.now();
-let lastWin = {z:1, px:0, py:0}, stabAng = {x:0, y:0}, stabSm = {x:0, y:0}, stabOff = {x:0, y:0}, lastMotion = 0;
-const cam2 = {x:0, y:0, z:1, x1:0, y1:0, z1:1};
-const stabOn = () => smart.stab && facing !== 'user' && !((screen.orientation && screen.orientation.angle) || 0);
-
-function loadDetector(){
-  return detLoading ||= (async () => {
-    const V = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
-    const {FaceDetector, FilesetResolver} = await import(V + '/vision_bundle.mjs');
-    const fs = await FilesetResolver.forVisionTasks(V + '/wasm');
-    const o = d => ({baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite', delegate:d}, runningMode:'VIDEO', minDetectionConfidence:.5});
-    try { detector = await FaceDetector.createFromOptions(fs, o('GPU')); } catch(e){ detector = await FaceDetector.createFromOptions(fs, o('CPU')); }
-    return detector;
-  })().catch(e => { detLoading = null; throw e; });
-}
-function smartTick(){
-  const now = performance.now();
-  if ((smart.face || smart.focus) && detector && pcan.width && now - lastDet > 90){
-    lastDet = now;
-    try {
-      const d = detector.detectForVideo(pcan, now).detections || [];
-      if (d.length){
-        const b = d.sort((p, q) => q.boundingBox.width*q.boundingBox.height - p.boundingBox.width*p.boundingBox.height)[0].boundingBox;
-        faceCur = {cx:(b.originX + b.width/2)/pcan.width, cy:(b.originY + b.height/2)/pcan.height, w:b.width/pcan.width, h:b.height/pcan.height}; lastFaceT = now;
-      }
-    } catch(e){}
-    if (smart.focus && faceCur && now - lastFaceT < 400 && now - lastPoi > 700 && track){ lastPoi = now; setCap({pointsOfInterest:[{x:faceCur.cx, y:faceCur.cy}]}); }
-  }
-  if (now - lastStat > 300 && $('pSmart').classList.contains('on')){
-    lastStat = now; const seen = faceCur && now - lastFaceT < 800;
-    $('smartStat').textContent = (smart.face || smart.focus) ? (seen ? 'Face detected' : 'Looking for a face…') : stabOn() ? 'Stabilizer on' : 'Everything is automatic. Turn features on as you need them.';
-  }
-}
-function smartWindow(bx, by){                        // virtual camera: smooth pan/zoom window inside the full frame
-  const now = performance.now(), dt = Math.min(.1, (now - lastFrameT)/1000); lastFrameT = now;
-  let tx = 0, ty = 0, tz = smart.stab ? 1.12 : 1;
-  if (smart.face && faceCur && now - lastFaceT < 1400){ tz = Math.min(2.4, Math.max(tz, .32 / faceCur.h)); tx = faceCur.cx - .5; ty = (1 - faceCur.cy) - .5; }
-  const k = 1 - Math.exp(-dt*4.5);                  // two-stage ease: starts and stops softly, like a gimbal
-  cam2.x1 += (tx - cam2.x1)*k; cam2.x += (cam2.x1 - cam2.x)*k;
-  cam2.y1 += (ty - cam2.y1)*k; cam2.y += (cam2.y1 - cam2.y)*k;
-  cam2.z1 += (tz - cam2.z1)*k; cam2.z += (cam2.z1 - cam2.z)*k;
-  const z = Math.max(1, cam2.z), st = stabOn(), mx = (1 - Math.abs(bx)/z)/2, my = (1 - Math.abs(by)/z)/2;
-  lastWin = {z, px:Math.max(-mx, Math.min(mx, cam2.x + (st ? stabOff.x : 0))), py:Math.max(-my, Math.min(my, cam2.y + (st ? stabOff.y : 0)))};
-  return lastWin;
-}
-function placeFaceBox(sx, sy, W){
-  const el = $('faceBox'), on = (smart.face || smart.focus) && faceCur && performance.now() - lastFaceT < 600;
-  el.classList.toggle('on', !!on); if (!on) return;
-  el.classList.toggle('lock', smart.face);
-  const px = (faceCur.cx - .5 - W.px)/sx + .5, py = ((1 - faceCur.cy) - .5 - W.py)/sy + .5;
-  const bw = faceCur.w/Math.abs(sx)*innerWidth*1.25, bh = faceCur.h/Math.abs(sy)*innerHeight*1.25;
-  el.style.width = bw + 'px'; el.style.height = bh + 'px';
-  el.style.transform = `translate(${px*innerWidth - bw/2}px, ${(1 - py)*innerHeight - bh/2}px)`;
-}
-addEventListener('devicemotion', e => {              // gyro: how far the phone has moved away from its own smoothed path
-  const now = performance.now(), dt = Math.min(.05, (now - lastMotion)/1000); lastMotion = now;
-  if (!stabOn() || !e.rotationRate) return;
-  stabAng.x += (e.rotationRate.beta || 0)*dt; stabAng.y += (e.rotationRate.gamma || 0)*dt;
-  const k = 1 - Math.exp(-dt*2.5);
-  stabSm.x += (stabAng.x - stabSm.x)*k; stabSm.y += (stabAng.y - stabSm.y)*k;
-  stabOff.x = (stabAng.y - stabSm.y) / 48; stabOff.y = -(stabAng.x - stabSm.x) / 70;
-});
-async function lockAFAE(on){
-  if (!track) return false;
-  if (!on){ await setCap({focusMode:'continuous', exposureMode:'continuous'}); toast('Auto focus and exposure on'); return true; }
-  const st = track.getSettings(), c = {};
-  if ((caps.focusMode || []).includes('manual') && st.focusDistance != null) Object.assign(c, {focusMode:'manual', focusDistance:st.focusDistance});
-  if ((caps.exposureMode || []).includes('manual') && st.iso != null && st.exposureTime != null) Object.assign(c, {exposureMode:'manual', iso:st.iso, exposureTime:st.exposureTime});
-  if (!Object.keys(c).length || !(await setCap(c))){ toast('Lock isn’t supported on this camera'); return false; }
-  toast('Focus and exposure locked'); return true;
-}
-function smartUi(){ document.querySelectorAll('.feat').forEach(b => b.classList.toggle('on', smart[b.dataset.k])); }
-async function setSmart(k, on){
-  smart[k] = on; smartUi();
-  try {
-    if ((k === 'face' || k === 'focus') && on){ toast('Loading face tracking…'); await loadDetector(); }
-    if (k === 'stab' && on){
-      if (window.DeviceMotionEvent && DeviceMotionEvent.requestPermission && await DeviceMotionEvent.requestPermission() !== 'granted') throw new Error('Motion access was denied');
-      stabAng = {x:0, y:0}; stabSm = {x:0, y:0}; stabOff = {x:0, y:0};
-    }
-    if (k === 'lock' && !(await lockAFAE(on))) smart.lock = false;
-  } catch(e){ smart[k] = false; toast(e.message || 'Couldn’t start that feature'); }
-  if (!smart.face && !smart.focus) faceCur = null;
-  smartUi();
-}
-document.querySelectorAll('.feat').forEach(b => b.onclick = () => setSmart(b.dataset.k, !smart[b.dataset.k]));
-
-let startMode = 'xr';
-$('start').onclick = () => {
-  const m = startMode;
-  (m === 'xr' ? startAR() : m === 'w8' ? startW8() : startLite()).catch(e => {
-    $('msg').textContent = 'Could not start AR: ' + e.message;
-    if (m === 'w8'){ startMode = 'lite'; $('start').textContent = 'Start basic camera mode'; }   // fall back
-  });
-};
-
-async function setStart(){
-  const btn = $('start');
-  let supported = false;
-  try { supported = !!navigator.xr && await navigator.xr.isSessionSupported('immersive-ar'); }
-  catch (e) {
-    // The page is inside an iframe/preview that does not allow WebXR (permissions policy).
-    xrBlocked = true; startMode = 'lite';
-    btn.disabled = false; btn.textContent = 'Open in a new tab';
-    $('msg').textContent = 'AR is blocked inside previews and embedded frames. Open the deployed page (GitHub Pages) directly in Chrome.';
-    btn.onclick = () => window.open(location.href, '_blank', 'noopener');
-    return;
-  }
-  if (!supported){
-    // No WebXR on this phone: camera + gyro mode, plus the phone's own AR viewer as an alternative
-    // No WebXR: use the 8th Wall SLAM engine (any modern phone). If it can't load, fall back to basic camera mode.
-    startMode = 'w8';
-    $('alt').hidden = false;
-    $('alt').onclick = () => {
-      $('landing').style.display = 'none'; $('fallback').style.display = 'flex';
-      import('https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js').catch(console.error);
+/* Look panel */
+function buildLookPanel() {
+  const p = $('#pLook');
+  p.innerHTML = '<i class="grab"></i><div class="presets" id="lookPresets"></div><p style="color:rgba(255,255,255,.6);font-size:12px;margin:6px 2px 0;text-shadow:0 1px 3px rgba(0,0,0,.5)">Tap a look to apply. Double-tap a slider in Adjust to reset it.</p>';
+  const presets = $('#lookPresets');
+  Object.keys(PRESETS).forEach(name => {
+    const b = document.createElement('button');
+    b.className = 'btn';
+    b.textContent = name;
+    b.onclick = () => {
+      Object.assign(G, DEFAULT_G, PRESETS[name]);
+      ppAdjust.refresh();
+      p.querySelectorAll('.btn').forEach(x => x.classList.toggle('sel', x === b));
+      showHint(name + ' applied');
     };
-  }
-  xrOK = true;
-  if (modelReady){ btn.disabled = false; btn.textContent = 'Start AR'; }
+    if (name === 'Natural') b.classList.add('sel');
+    presets.appendChild(b);
+  });
 }
-setStart(); startCam(); setTimeout(loadModel, 1500);
-addEventListener('resize', () => { if (w8) sizeXrCanvas(); else if (!lite) renderer.setSize(innerWidth, innerHeight); });
+
+/* ---------- UI wiring ---------- */
+function setMode(m) {
+  state.mode = m;
+  const ui = $('#ui');
+  ui.classList.remove('vid', 'ultra', 'night');
+  if (m === 'video') ui.classList.add('vid');
+  if (m === 'ultra') ui.classList.add('ultra');
+  if (m === 'night') ui.classList.add('night');
+}
+
+document.querySelectorAll('#modes button').forEach((btn, i) => {
+  btn.onclick = () => {
+    document.querySelectorAll('#modes button').forEach(b => b.classList.remove('sel'));
+    btn.classList.add('sel');
+    $('#modes').style.setProperty('--i', i);
+    setMode(btn.dataset.m);
+  };
+});
+
+/* Shutter */
+shutter.onclick = () => {
+  if (state.mode === 'photo') takePhoto();
+  else if (state.mode === 'video') recording ? stopRecording() : startRecording();
+  else if (state.mode === 'ultra') captureUltra();
+  else if (state.mode === 'night') captureNight();
+};
+
+/* Flash */
+$('#bFlash').onclick = toggleTorch;
+
+/* Timer */
+const TIMERS = [0, 3, 10];
+$('#bTimer').onclick = () => {
+  const i = (TIMERS.indexOf(state.timerSec) + 1) % TIMERS.length;
+  state.timerSec = TIMERS[i];
+  $('#bTimer').querySelector('.lbl').textContent = state.timerSec === 0 ? 'Off' : state.timerSec + 's';
+  $('#bTimer').classList.toggle('act', state.timerSec > 0);
+};
+
+/* Grid */
+$('#bGrid').onclick = () => {
+  state.grid = !state.grid;
+  $('#bGrid').classList.toggle('act', state.grid);
+  guides.classList.toggle('on', state.grid);
+  drawGuides();
+};
+
+/* Resolution */
+const RES_LABELS = ['HD', 'FHD', '4K'];
+$('#bRes').onclick = async () => {
+  state.resIdx = (state.resIdx + 1) % RES.length;
+  $('#bRes').textContent = RES_LABELS[state.resIdx];
+  showHint('Restarting camera at ' + RES_LABELS[state.resIdx]);
+  await startCamera();
+};
+
+/* False color */
+$('#bFalse').onclick = () => {
+  state.falseColor = !state.falseColor;
+  $('#bFalse').classList.toggle('act', state.falseColor);
+  showHint(state.falseColor ? 'False colour on' : 'False colour off');
+};
+
+/* Zoom pills */
+document.querySelectorAll('.zoom').forEach(b => {
+  b.onclick = () => setZoom(+b.dataset.z);
+});
+
+/* Flip camera */
+$('#bFlip').onclick = async () => {
+  if (recording) return showHint('Stop recording first');
+  state.facing = state.facing === 'environment' ? 'user' : 'environment';
+  await startCamera();
+};
+
+/* Thumbnail / viewer */
+thumb.onclick = () => {
+  if (!lastCap) return showHint('Nothing captured yet');
+  const w = viewer.querySelector('.vwrap');
+  w.innerHTML = '';
+  const el = document.createElement(lastCap.kind === 'image' ? 'img' : 'video');
+  el.src = lastCap.url;
+  if (lastCap.kind === 'video') { el.controls = true; el.playsInline = true; el.autoplay = true; }
+  w.appendChild(el);
+  viewer.classList.add('on');
+};
+$('#vClose').onclick = () => {
+  viewer.classList.remove('on');
+  viewer.querySelector('.vwrap').innerHTML = '';
+};
+$('#vSave').onclick = () => {
+  if (!lastCap) return;
+  const a = document.createElement('a');
+  a.href = lastCap.url; a.download = lastCap.name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+};
+$('#vShare').onclick = async () => {
+  if (!lastCap) return;
+  try {
+    const f = new File([lastCap.blob], lastCap.name, {type: lastCap.blob.type});
+    if (navigator.canShare && navigator.canShare({files: [f]})) await navigator.share({files: [f]});
+    else showHint('Sharing not supported here');
+  } catch (e) {}
+};
+
+/* Panel toggles — histogram follows Adjust panel */
+const PANELS = ['pLook', 'pAdjust', 'pPro', 'pAudio'];
+const DOCK_BTNS = ['bLook', 'bAdjust', 'bPro', 'bAudio'];
+function togglePanel(panelId, btnId) {
+  const p = $('#' + panelId);
+  const b = $('#' + btnId);
+  const wasOpen = p.classList.contains('on');
+  PANELS.forEach(id => $('#' + id).classList.remove('on'));
+  DOCK_BTNS.forEach(id => $('#' + id).classList.remove('act'));
+  if (!wasOpen) {
+    p.classList.add('on');
+    b.classList.add('act');
+    if (panelId === 'pPro') buildPro();
+  }
+  state.hist = (panelId === 'pAdjust') && !wasOpen;
+  histCv.classList.toggle('on', state.hist);
+}
+$('#bLook').onclick = () => togglePanel('pLook', 'bLook');
+$('#bAdjust').onclick = () => togglePanel('pAdjust', 'bAdjust');
+$('#bPro').onclick = () => togglePanel('pPro', 'bPro');
+$('#bAudio').onclick = () => togglePanel('pAudio', 'bAudio');
+
+/* Audio panel controls */
+$('#audioGain').oninput = (e) => {
+  state.gain = +e.target.value;
+  e.target.nextElementSibling.textContent = state.gain.toFixed(2) + '×';
+  if (gainNode) gainNode.gain.value = state.gain;
+};
+$('#burst').oninput = (e) => {
+  state.burst = +e.target.value;
+  e.target.nextElementSibling.textContent = state.burst;
+};
+$('#micSel').onchange = async (e) => {
+  state.micId = e.target.value;
+  await setupAudio();
+};
+$('#aWnd').onclick = (e) => {
+  state.wind = !state.wind;
+  e.currentTarget.classList.toggle('sel', state.wind);
+  if (hpf) hpf.frequency.value = state.wind ? 90 : 20;
+};
+$('#aLim').onclick = (e) => {
+  state.limiter = !state.limiter;
+  e.currentTarget.classList.toggle('sel', state.limiter);
+  if (comp) {
+    comp.threshold.value = state.limiter ? -18 : 0;
+    comp.ratio.value = state.limiter ? 20 : 1;
+  }
+};
+$('#aZebra').onclick = (e) => {
+  state.zebra = !state.zebra;
+  e.currentTarget.classList.toggle('sel', state.zebra);
+};
+
+/* Grab handle drag-to-close */
+document.querySelectorAll('.panel').forEach(p => {
+  const g = p.querySelector('.grab');
+  if (!g) return;
+  let y0 = null;
+  g.addEventListener('pointerdown', e => {
+    y0 = e.clientY; g.setPointerCapture(e.pointerId); p.style.transition = 'none';
+  });
+  g.addEventListener('pointermove', e => {
+    if (y0 != null) p.style.transform = `translateY(${Math.max(0, e.clientY - y0)}px)`;
+  });
+  const end = e => {
+    if (y0 == null) return;
+    const dy = e.clientY - y0; y0 = null;
+    p.style.transition = ''; p.style.transform = '';
+    if (dy > 60) {
+      p.classList.remove('on');
+      document.querySelectorAll('#dock .chip').forEach(c => c.classList.remove('act'));
+    }
+  };
+  g.addEventListener('pointerup', end);
+  g.addEventListener('pointercancel', end);
+});
+
+/* Tap-to-focus (works on the video and the graded canvas) */
+async function focusAt(clientX, clientY) {
+  if (!videoTrack) return;
+  const rect = video.getBoundingClientRect();
+  const x = (clientX - rect.left) / rect.width;
+  const y = (clientY - rect.top)  / rect.height;
+  if (x < 0 || x > 1 || y < 0 || y > 1) return;
+
+  const ring = $('#focusRing');
+  ring.style.left = (x * 100) + '%';
+  ring.style.top  = (y * 100) + '%';
+  ring.classList.remove('show'); void ring.offsetWidth; ring.classList.add('show');
+
+  try {
+    await videoTrack.applyConstraints({advanced: [
+      {pointsOfInterest: [{x, y}], focusMode: 'single-shot'}
+    ]});
+  } catch (e) {}
+
+  setTimeout(() => {
+    videoTrack.applyConstraints({advanced: [{focusMode: 'continuous'}]}).catch(() => {});
+  }, 1800);
+}
+document.addEventListener('pointerdown', (e) => {
+  if (e.target === video || e.target === glCanvas) focusAt(e.clientX, e.clientY);
+}, {passive: true});
+
+/* Render loop */
+function loop() {
+  const vw = video.videoWidth, vh = video.videoHeight;
+  if (vw && vh && video.readyState >= 2 && !busy) {
+    if (glCanvas.width !== vw || glCanvas.height !== vh) resizeCanvas();
+
+    // Always grade while recording so captureStream sees frames.
+    const graded = !isIdentity() || recording;
+
+    if (graded) {
+      video.style.display = 'none';
+      glCanvas.style.display = 'block';
+      drawGraded(video);
+    } else {
+      video.style.display = 'block';
+      glCanvas.style.display = 'none';
+    }
+
+    // Mirror the front camera on-screen only (saved files stay unmirrored).
+    const mir = state.facing === 'user' ? 'scaleX(-1)' : '';
+    video.style.transform = mir;
+    glCanvas.style.transform = mir;
+  }
+
+  if (state.hist && performance.now() - lastHist > 250) {
+    lastHist = performance.now();
+    try { drawHistogram(); } catch (e) {}
+  }
+  requestAnimationFrame(loop);
+}
+
+/* Boot */
+(async function boot() {
+  try {
+    initGL();
+    buildLookPanel();
+    await startCamera();
+    requestAnimationFrame(loop);
+  } catch (e) {
+    console.error(e);
+    setErr(e.message + '\n\n' + (e.stack || ''));
+  }
+})();
 </script>
 </body>
 </html>
